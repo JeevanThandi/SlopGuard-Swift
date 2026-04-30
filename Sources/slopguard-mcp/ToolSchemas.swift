@@ -1,12 +1,11 @@
 import Foundation
-import MCP
 
 /// JSON Schema literals for slopguard's MCP tool inputs. We hand-author these as
-/// `Value` literals so they round-trip cleanly through the SDK encoder and stay
+/// `JSONValue` literals so they round-trip cleanly through the encoder and stay
 /// human-readable for agents that look at the `tools/list` response.
 enum ToolSchemas {
 
-    static var analyzeDirectory: Value {
+    static var analyzeDirectory: JSONValue {
         [
             "type": "object",
             "properties": [
@@ -48,7 +47,7 @@ enum ToolSchemas {
         ]
     }
 
-    static var analyzeFile: Value {
+    static var analyzeFile: JSONValue {
         [
             "type": "object",
             "properties": [
@@ -74,7 +73,7 @@ enum ToolSchemas {
         ]
     }
 
-    static var getCrapReport: Value {
+    static var getCrapReport: JSONValue {
         [
             "type": "object",
             "properties": [
@@ -103,7 +102,7 @@ enum ToolSchemas {
         ]
     }
 
-    static var findCrappyCode: Value {
+    static var findCrappyCode: JSONValue {
         [
             "type": "object",
             "properties": [
@@ -127,7 +126,7 @@ enum ToolSchemas {
         ]
     }
 
-    static var getCoverageGaps: Value {
+    static var getCoverageGaps: JSONValue {
         [
             "type": "object",
             "properties": [
@@ -149,7 +148,7 @@ enum ToolSchemas {
         ]
     }
 
-    static var suggestRefactor: Value {
+    static var suggestRefactor: JSONValue {
         [
             "type": "object",
             "properties": [

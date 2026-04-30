@@ -24,8 +24,7 @@ let package = Package(
     ],
     dependencies: [
         .package(url: "https://github.com/swiftlang/swift-syntax.git", from: "603.0.0"),
-        .package(url: "https://github.com/apple/swift-argument-parser.git", from: "1.5.0"),
-        .package(url: "https://github.com/modelcontextprotocol/swift-sdk.git", from: "0.12.0")
+        .package(url: "https://github.com/apple/swift-argument-parser.git", from: "1.5.0")
     ],
     targets: [
         // MARK: Core
@@ -52,8 +51,7 @@ let package = Package(
             name: "SlopguardMCP",
             dependencies: [
                 "SlopguardCore",
-                "SlopguardCoverage",
-                .product(name: "MCP", package: "swift-sdk")
+                "SlopguardCoverage"
             ],
             path: "Sources/slopguard-mcp",
             swiftSettings: [.swiftLanguageMode(.v6)]

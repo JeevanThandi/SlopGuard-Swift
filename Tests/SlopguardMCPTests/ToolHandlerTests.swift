@@ -2,7 +2,6 @@ import XCTest
 @testable import SlopguardMCP
 import SlopguardCore
 import SlopguardCoverage
-import MCP
 
 final class ToolHandlerTests: XCTestCase {
 

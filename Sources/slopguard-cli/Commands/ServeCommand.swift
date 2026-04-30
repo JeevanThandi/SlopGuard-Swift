@@ -1,6 +1,5 @@
 import Foundation
 import ArgumentParser
-import MCP
 import SlopguardCore
 import SlopguardMCP
 
@@ -44,9 +43,8 @@ struct ServeCommand: AsyncParsableCommand {
 
     private func runStdio() async throws {
         let server = SlopguardMCPServer()
-        let stdio = StdioTransport()
         do {
-            try await server.run(transport: stdio)
+            try await server.run()
         } catch {
             FileHandle.standardError.write(Data("slopguard-swift: MCP server error: \(error)\n".utf8))
             throw ExitCode(1)
