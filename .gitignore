@@ -1,0 +1,12 @@
+.build/
+.swiftpm/
+.claude/
+DerivedData/
+xcuserdata/
+*.xcodeproj/project.xcworkspace/
+*.xcodeproj/xcuserdata/
+*.xcworkspace/xcuserdata/
+*.xcresult/
+.DS_Store
+Package.resolved.bak
+*.swp

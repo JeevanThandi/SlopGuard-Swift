@@ -1,0 +1,66 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  build-and-test:
+    name: Build & test (macOS)
+    runs-on: macos-14
+    timeout-minutes: 25
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Select Xcode 16
+        run: sudo xcode-select -s /Applications/Xcode_16.0.app/Contents/Developer
+
+      - name: Print toolchain
+        run: |
+          swift --version
+          xcrun --sdk macosx --show-sdk-path
+
+      - name: Resolve dependencies
+        run: swift package resolve
+
+      - name: Build (debug)
+        run: swift build
+
+      - name: Test
+        run: swift test --parallel
+
+      - name: Dogfood — analyze our own sources
+        run: swift run slopguard analyze --path Sources --threshold 30 --json > slopguard-self.json
+
+      - name: Upload self-analysis
+        uses: actions/upload-artifact@v4
+        with:
+          name: slopguard-self-analysis
+          path: slopguard-self.json
+          if-no-files-found: error
+
+  release-build:
+    name: Release build (universal)
+    runs-on: macos-14
+    timeout-minutes: 25
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Select Xcode 16
+        run: sudo xcode-select -s /Applications/Xcode_16.0.app/Contents/Developer
+
+      - name: Build release (universal)
+        run: |
+          swift build -c release \
+              --arch arm64 \
+              --arch x86_64
+
+      - name: Smoke test the release binary
+        run: |
+          ./.build/apple/Products/Release/slopguard version
+          ./.build/apple/Products/Release/slopguard analyze --path Sources --threshold 30 --json > /dev/null

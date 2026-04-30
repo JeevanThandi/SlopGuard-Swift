@@ -1,0 +1,139 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Tag to release (e.g. v0.1.0)"
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Build, sign, notarize, publish
+    runs-on: macos-14
+    timeout-minutes: 45
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Select Xcode 16
+        run: sudo xcode-select -s /Applications/Xcode_16.0.app/Contents/Developer
+
+      - name: Resolve version
+        id: version
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+              TAG="${{ inputs.tag }}"
+          else
+              TAG="${GITHUB_REF#refs/tags/}"
+          fi
+          echo "tag=$TAG" >> $GITHUB_OUTPUT
+          echo "version=${TAG#v}" >> $GITHUB_OUTPUT
+          echo "Building $TAG"
+
+      - name: Verify version matches Sources/slopguard-core/Version.swift
+        run: |
+          DECLARED=$(grep 'public static let version' Sources/slopguard-core/Version.swift | sed -E 's/.*"([^"]+)".*/\1/')
+          if [ "$DECLARED" != "${{ steps.version.outputs.version }}" ]; then
+              echo "::error::Version.swift declares $DECLARED but tag is ${{ steps.version.outputs.version }}"
+              exit 1
+          fi
+
+      - name: Build universal release binary
+        run: |
+          swift build -c release --arch arm64 --arch x86_64
+          mkdir -p dist
+          cp .build/apple/Products/Release/slopguard dist/slopguard
+
+      # Code signing requires three secrets:
+      #   APPLE_DEV_ID_CERT_BASE64  — base64 of a .p12 containing a Developer ID Application certificate
+      #   APPLE_DEV_ID_CERT_PASSWORD — password for that .p12
+      #   APPLE_DEV_ID_IDENTITY      — e.g. "Developer ID Application: Foo Bar (TEAM_ID)"
+      - name: Import signing certificate
+        env:
+          CERT_B64: ${{ secrets.APPLE_DEV_ID_CERT_BASE64 }}
+          CERT_PWD: ${{ secrets.APPLE_DEV_ID_CERT_PASSWORD }}
+        run: |
+          if [ -z "$CERT_B64" ]; then
+              echo "::warning::APPLE_DEV_ID_CERT_BASE64 not set — skipping code signing. Build will still produce an unsigned artifact."
+              echo "SIGN=false" >> $GITHUB_ENV
+              exit 0
+          fi
+          KEYCHAIN_PATH=$RUNNER_TEMP/build.keychain
+          KEYCHAIN_PWD=$(uuidgen)
+          security create-keychain -p "$KEYCHAIN_PWD" "$KEYCHAIN_PATH"
+          security set-keychain-settings -lut 21600 "$KEYCHAIN_PATH"
+          security unlock-keychain -p "$KEYCHAIN_PWD" "$KEYCHAIN_PATH"
+          echo "$CERT_B64" | base64 --decode > $RUNNER_TEMP/cert.p12
+          security import $RUNNER_TEMP/cert.p12 -k "$KEYCHAIN_PATH" -P "$CERT_PWD" -T /usr/bin/codesign
+          security list-keychains -d user -s "$KEYCHAIN_PATH" $(security list-keychains -d user | tr -d \")
+          security set-key-partition-list -S apple-tool:,apple: -s -k "$KEYCHAIN_PWD" "$KEYCHAIN_PATH"
+          echo "SIGN=true" >> $GITHUB_ENV
+
+      - name: Codesign binary
+        if: env.SIGN == 'true'
+        env:
+          IDENTITY: ${{ secrets.APPLE_DEV_ID_IDENTITY }}
+        run: |
+          codesign --force --options runtime --timestamp \
+              --sign "$IDENTITY" \
+              dist/slopguard
+          codesign --verify --verbose=2 dist/slopguard
+
+      # Notarization requires:
+      #   APPLE_NOTARY_PROFILE — name of a stored notarytool credential profile (preferred), OR
+      #   APPLE_ID, APPLE_TEAM_ID, APPLE_APP_PASSWORD
+      - name: Notarize
+        if: env.SIGN == 'true'
+        env:
+          PROFILE: ${{ secrets.APPLE_NOTARY_PROFILE }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          APP_PASSWORD: ${{ secrets.APPLE_APP_PASSWORD }}
+        run: |
+          ZIP=dist/slopguard.zip
+          /usr/bin/ditto -c -k --keepParent dist/slopguard "$ZIP"
+          if [ -n "$PROFILE" ]; then
+              xcrun notarytool submit "$ZIP" --keychain-profile "$PROFILE" --wait
+          else
+              xcrun notarytool submit "$ZIP" --apple-id "$APPLE_ID" --team-id "$TEAM_ID" --password "$APP_PASSWORD" --wait
+          fi
+          # Single binaries can't be stapled directly; stapling targets a .dmg/.app/.pkg.
+          # The notarization ticket is checked online by Gatekeeper. For users that need
+          # offline verification, the .zip we ship can be re-notarized as a wrapper.
+
+      - name: Generate SBOM
+        run: ./Scripts/sbom.sh dist/slopguard-${{ steps.version.outputs.version }}-sbom.json
+
+      - name: Package tarball
+        id: pkg
+        run: |
+          NAME="slopguard-${{ steps.version.outputs.version }}-macos-universal"
+          mkdir -p "dist/$NAME"
+          cp dist/slopguard "dist/$NAME/slopguard"
+          cp LICENSE README.md SECURITY.md "dist/$NAME/"
+          tar -C dist -czf "dist/$NAME.tar.gz" "$NAME"
+          (cd dist && shasum -a 256 "$NAME.tar.gz" > "$NAME.tar.gz.sha256")
+          shasum -a 256 dist/slopguard > dist/slopguard.sha256
+          echo "name=$NAME" >> $GITHUB_OUTPUT
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.version.outputs.tag }}
+          files: |
+            dist/${{ steps.pkg.outputs.name }}.tar.gz
+            dist/${{ steps.pkg.outputs.name }}.tar.gz.sha256
+            dist/slopguard.sha256
+            dist/slopguard-${{ steps.version.outputs.version }}-sbom.json
+          draft: false
+          prerelease: ${{ contains(steps.version.outputs.tag, '-') }}
+          generate_release_notes: true
