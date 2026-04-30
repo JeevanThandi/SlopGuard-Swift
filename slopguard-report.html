@@ -1,0 +1,2883 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>slopguard report — slopguard-swift</title>
+<style>
+:root {
+  --bg: #0f1115; --panel: #161922; --panel2: #1c2030; --border: #2a2f40;
+  --fg: #e6e8ee; --muted: #8a93a6; --accent: #7aa2f7;
+  --good: #9ece6a; --ok: #e0af68; --bad: #f7768e;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--fg); font: 14px/1.5 -apple-system, "SF Pro Text", Inter, sans-serif; }
+header { padding: 24px 32px; border-bottom: 1px solid var(--border); background: var(--panel); }
+h1 { margin: 0 0 4px; font-size: 22px; font-weight: 600; }
+header .meta { color: var(--muted); font-size: 13px; }
+header .meta code { background: var(--panel2); padding: 1px 6px; border-radius: 4px; }
+main { padding: 24px 32px; max-width: 1400px; margin: 0 auto; }
+section { margin-bottom: 32px; }
+h2 { font-size: 16px; font-weight: 600; margin: 0 0 12px; color: var(--fg); }
+.cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; }
+.card { background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 14px 16px; }
+.card .label { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: 0.04em; }
+.card .value { font-size: 22px; font-weight: 600; margin-top: 4px; font-variant-numeric: tabular-nums; }
+.card .sub { color: var(--muted); font-size: 12px; margin-top: 2px; }
+.notes { background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 12px 18px; color: var(--muted); }
+.notes ul { margin: 0; padding-left: 18px; }
+.notes li { margin: 4px 0; }
+table { width: 100%; border-collapse: collapse; background: var(--panel); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; font-size: 13px; }
+thead { background: var(--panel2); }
+th, td { padding: 8px 12px; text-align: left; border-bottom: 1px solid var(--border); }
+th { font-weight: 600; color: var(--muted); cursor: pointer; user-select: none; white-space: nowrap; }
+th:hover { color: var(--fg); }
+tbody tr:last-child td { border-bottom: none; }
+tbody tr:hover { background: rgba(122, 162, 247, 0.06); }
+.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.mono { font-family: "SF Mono", Menlo, monospace; font-size: 12px; color: var(--muted); }
+.cov-good { color: var(--good); }
+.cov-ok   { color: var(--ok); }
+.cov-bad  { color: var(--bad); }
+.cov-none { color: var(--muted); }
+.crap-ok   { color: var(--good); }
+.crap-warn { color: var(--ok); }
+.crap-bad  { color: var(--bad); font-weight: 600; }
+.controls { display: flex; gap: 8px; margin-bottom: 8px; align-items: center; }
+.controls input { background: var(--panel2); color: var(--fg); border: 1px solid var(--border); border-radius: 6px; padding: 6px 10px; font: inherit; flex: 1; max-width: 320px; }
+.controls label { color: var(--muted); font-size: 12px; }
+.legend { color: var(--muted); font-size: 12px; margin-top: 8px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>slopguard-swift report</h1>
+  <div class="meta">
+    <code>/Users/jeevan/Desktop/projects/slopguard/slopguard-swift</code> ·
+    schema 2 ·
+    slopguard-swift v0.1.0 ·
+    threshold 30 ·
+    coverage: yes ·
+    generated 2026-04-30 10:33 UTC
+  </div>
+</header>
+<main>
+
+<section>
+  <h2>Summary</h2>
+  <div class="cards">
+    <div class="card"><div class="label">Files</div><div class="value">37</div></div>
+    <div class="card"><div class="label">Types</div><div class="value">70</div><div class="sub">4 crappy</div></div>
+    <div class="card"><div class="label">Methods</div><div class="value">188</div><div class="sub">0 crappy</div></div>
+    <div class="card"><div class="label">Avg cyclomatic</div><div class="value">2.12</div></div>
+    <div class="card"><div class="label">Avg cognitive</div><div class="value">0.99</div></div>
+    <div class="card"><div class="label">Avg weighted</div><div class="value">1.12</div></div>
+    <div class="card"><div class="label">Avg wCRAP</div><div class="value">1.36</div></div>
+    <div class="card"><div class="label">Max wCRAP</div><div class="value">20.00</div></div>
+    <div class="card"><div class="label">Weighted coverage</div><div class="value cov-good">83.2%</div></div>
+  </div>
+</section>
+
+<section>
+  <h2>Notes</h2>
+  <div class="notes"><ul><li>Score is wCRAP (weighted CRAP) since schema 2: complexity input is weightedComplexity = sqrt(cyclomatic × cognitive), not raw cyclomatic. Both raw metrics ship under `complexity` (cyclomatic, McCabe) and `cognitiveComplexity` (SonarSource 2023); the score itself is reported under the existing `crap` field for schema continuity. Recursion increment is deferred (known undercount vs Sonar parity).</li></ul></div>
+</section>
+
+<section>
+  <h2>Types (70) — sorted by aggregated wCRAP</h2>
+  <div class="controls">
+    <input id="typeFilter" placeholder="Filter types by name or file…">
+  </div>
+  <table id="typeTable">
+    <thead><tr>
+      <th>Location</th><th>Name</th><th>Kind</th>
+      <th class="num">Methods</th><th class="num">Σ cyc</th><th class="num">Σ cog</th><th class="num">Σ weighted</th>
+      <th class="num">Coverage</th><th class="num">Max wCRAP</th><th class="num">Agg wCRAP</th><th></th>
+    </tr></thead>
+    <tbody><tr data-crap="96.55880404134201">
+      <td class="mono">Sources/slopguard-coverage/XcodebuildRunner.swift:14</td>
+      <td>XcodebuildRunner</td>
+      <td>struct</td>
+      <td class="num">8</td>
+      <td class="num">18</td>
+      <td class="num">8</td>
+      <td class="num">12.00</td>
+      <td class="num cov-bad">16.3%</td>
+      <td class="num">10.83</td>
+      <td class="num crap-bad">96.56</td>
+      <td>⚠️</td>
+    </tr><tr data-crap="46.702555579209836">
+      <td class="mono">Sources/slopguard-core/Analysis/ComplexityVisitor.swift:35</td>
+      <td>ComplexityVisitor</td>
+      <td>class</td>
+      <td class="num">60</td>
+      <td class="num">90</td>
+      <td class="num">22</td>
+      <td class="num">44.50</td>
+      <td class="num cov-good">89.6%</td>
+      <td class="num">5.48</td>
+      <td class="num crap-bad">46.70</td>
+      <td>⚠️</td>
+    </tr><tr data-crap="34.97416406153985">
+      <td class="mono">Sources/slopguard-coverage/XcresultProbe.swift:19</td>
+      <td>XcresultProbe</td>
+      <td>struct</td>
+      <td class="num">8</td>
+      <td class="num">22</td>
+      <td class="num">10</td>
+      <td class="num">14.83</td>
+      <td class="num cov-ok">54.9%</td>
+      <td class="num">4.90</td>
+      <td class="num crap-bad">34.97</td>
+      <td>⚠️</td>
+    </tr><tr data-crap="33.29150262212919">
+      <td class="mono">Sources/slopguard-mcp/SlopguardMCPServer.swift:7</td>
+      <td>SlopguardMCPServer</td>
+      <td>actor</td>
+      <td class="num">4</td>
+      <td class="num">7</td>
+      <td class="num">4</td>
+      <td class="num">5.29</td>
+      <td class="num cov-bad">0.0%</td>
+      <td class="num">20.00</td>
+      <td class="num crap-bad">33.29</td>
+      <td>⚠️</td>
+    </tr><tr data-crap="19.33983816649553">
+      <td class="mono">Sources/slopguard-core/Analysis/DirectoryAnalyzer.swift:60</td>
+      <td>DirectoryAnalyzer</td>
+      <td>struct</td>
+      <td class="num">8</td>
+      <td class="num">22</td>
+      <td class="num">17</td>
+      <td class="num">19.34</td>
+      <td class="num cov-good">98.7%</td>
+      <td class="num">6.93</td>
+      <td class="num crap-warn">19.34</td>
+      <td></td>
+    </tr><tr data-crap="19.339079605813716">
+      <td class="mono">Sources/slopguard-core/Aggregation/CrapAggregator.swift:5</td>
+      <td>CrapAggregator</td>
+      <td>struct</td>
+      <td class="num">3</td>
+      <td class="num">22</td>
+      <td class="num">17</td>
+      <td class="num">19.34</td>
+      <td class="num cov-good">100.0%</td>
+      <td class="num">15.97</td>
+      <td class="num crap-warn">19.34</td>
+      <td></td>
+    </tr><tr data-crap="16.309780572600555">
+      <td class="mono">Sources/slopguard-core/Formatting/CrapReportFormatter.swift:6</td>
+      <td>CrapReportFormatter</td>
+      <td>enum</td>
+      <td class="num">9</td>
+      <td class="num">19</td>
+      <td class="num">14</td>
+      <td class="num">16.31</td>
+      <td class="num cov-good">99.0%</td>
+      <td class="num">5.48</td>
+      <td class="num crap-warn">16.31</td>
+      <td></td>
+    </tr><tr data-crap="14.422205101855956">
+      <td class="mono">Sources/slopguard-coverage/CoverageIndex.swift:13</td>
+      <td>CoverageIndex</td>
+      <td>struct</td>
+      <td class="num">4</td>
+      <td class="num">16</td>
+      <td class="num">13</td>
+      <td class="num">14.42</td>
+      <td class="num cov-good">100.0%</td>
+      <td class="num">5.48</td>
+      <td class="num crap-ok">14.42</td>
+      <td></td>
+    </tr><tr data-crap="13.827936146653732">
+      <td class="mono">Sources/slopguard-coverage/AnalysisPipeline.swift:10</td>
+      <td>AnalysisPipeline</td>
+      <td>struct</td>
+      <td class="num">5</td>
+      <td class="num">17</td>
+      <td class="num">9</td>
+      <td class="num">12.37</td>
+      <td class="num cov-ok">78.8%</td>
+      <td class="num">4.92</td>
+      <td class="num crap-ok">13.83</td>
+      <td></td>
+    </tr><tr data-crap="13.490737563232042">
+      <td class="mono">Sources/slopguard-mcp/Tools/SuggestRefactorTool.swift:6</td>
+      <td>SuggestRefactorTool</td>
+      <td>enum</td>
+      <td class="num">1</td>
+      <td class="num">14</td>
+      <td class="num">13</td>
+      <td class="num">13.49</td>
+      <td class="num cov-good">100.0%</td>
+      <td class="num">13.49</td>
+      <td class="num crap-ok">13.49</td>
+      <td></td>
+    </tr><tr data-crap="13.162277660168382">
+      <td class="mono">Sources/slopguard-cli/Commands/ServeCommand.swift:7</td>
+      <td>ServeCommand</td>
+      <td>struct</td>
+      <td class="num">2</td>
+      <td class="num">5</td>
+      <td class="num">2</td>
+      <td class="num">3.16</td>
+      <td class="num cov-bad">0.0%</td>
+      <td class="num">4.73</td>
+      <td class="num crap-ok">13.16</td>
+      <td></td>
+    </tr><tr data-crap="12.346047971699424">
+      <td class="mono">Sources/slopguard-mcp/Tools/ToolDefinition.swift:36</td>
+      <td>ToolUtilities</td>
+      <td>enum</td>
+      <td class="num">9</td>
+      <td class="num">19</td>
+      <td class="num">8</td>
+      <td class="num">12.33</td>
+      <td class="num cov-good">95.2%</td>
+      <td class="num">2.45</td>
+      <td class="num crap-ok">12.35</td>
+      <td></td>
+    </tr><tr data-crap="11.490674879852916">
+      <td class="mono">Sources/slopguard-coverage/ProjectRootDiscovery.swift:13</td>
+      <td>ProjectRootDiscovery</td>
+      <td>enum</td>
+      <td class="num">2</td>
+      <td class="num">11</td>
+      <td class="num">12</td>
+      <td class="num">11.49</td>
+      <td class="num cov-good">97.7%</td>
+      <td class="num">6.01</td>
+      <td class="num crap-ok">11.49</td>
+      <td></td>
+    </tr><tr data-crap="9.419092921544625">
+      <td class="mono">Sources/slopguard-cli/Commands/AnalyzeCommand.swift:6</td>
+      <td>AnalyzeCommand</td>
+      <td>struct</td>
+      <td class="num">5</td>
+      <td class="num">11</td>
+      <td class="num">8</td>
+      <td class="num">9.38</td>
+      <td class="num cov-good">92.4%</td>
+      <td class="num">6.00</td>
+      <td class="num crap-ok">9.42</td>
+      <td></td>
+    </tr><tr data-crap="8.593428482014204">
+      <td class="mono">Sources/slopguard-core/Errors/SlopguardError.swift:24</td>
+      <td>SlopguardError</td>
+      <td>enum</td>
+      <td class="num">4</td>
+      <td class="num">22</td>
+      <td class="num">3</td>
+      <td class="num">8.12</td>
+      <td class="num cov-good">80.8%</td>
+      <td class="num">8.03</td>
+      <td class="num crap-ok">8.59</td>
+      <td></td>
+    </tr><tr data-crap="4.84375">
+      <td class="mono">Sources/slopguard-coverage/XccovRunner.swift:13</td>
+      <td>XccovRunner</td>
+      <td>struct</td>
+      <td class="num">5</td>
+      <td class="num">8</td>
+      <td class="num">2</td>
+      <td class="num">4.00</td>
+      <td class="num cov-ok">62.5%</td>
+      <td class="num">1.41</td>
+      <td class="num crap-ok">4.84</td>
+      <td></td>
+    </tr><tr data-crap="4">
+      <td class="mono">Sources/slopguard-coverage/ProcessRunner.swift:11</td>
+      <td>ProcessRunner</td>
+      <td>enum</td>
+      <td class="num">2</td>
+      <td class="num">8</td>
+      <td class="num">2</td>
+      <td class="num">4.00</td>
+      <td class="num cov-good">100.0%</td>
+      <td class="num">3.16</td>
+      <td class="num crap-ok">4.00</td>
+      <td></td>
+    </tr><tr data-crap="3.872983346207417">
+      <td class="mono">Sources/slopguard-coverage/AnalysisPipeline.swift:63</td>
+      <td>CoverageSource</td>
+      <td>enum</td>
+      <td class="num">2</td>
+      <td class="num">5</td>
+      <td class="num">3</td>
+      <td class="num">3.87</td>
+      <td class="num cov-good">100.0%</td>
+      <td class="num">2.45</td>
+      <td class="num crap-ok">3.87</td>
+      <td></td>
+    </tr><tr data-crap="3.4641016151377544">
+      <td class="mono">Sources/slopguard-core/CRAP.swift:22</td>
+      <td>CRAP</td>
+      <td>enum</td>
+      <td class="num">2</td>
+      <td class="num">4</td>
+      <td class="num">3</td>
+      <td class="num">3.46</td>
+      <td class="num cov-good">100.0%</td>
+      <td class="num">3.00</td>
+      <td class="num crap-ok">3.46</td>
+      <td></td>
+    </tr><tr data-crap="2.2369253163200917">
+      <td class="mono">Sources/slopguard-core/Analysis/SwiftFileAnalyzer.swift:7</td>
+      <td>SwiftFileAnalyzer</td>
+      <td>struct</td>
+      <td class="num">3</td>
+      <td class="num">5</td>
+      <td class="num">1</td>
+      <td class="num">2.24</td>
+      <td class="num cov-good">94.4%</td>
+      <td class="num">1.74</td>
+      <td class="num crap-ok">2.24</td>
+      <td></td>
+    </tr><tr data-crap="0">
+      <td class="mono">Sources/slopguard-cli-bin/SlopguardMain.swift:3</td>
+      <td>SlopguardMain</td>
+      <td>struct</td>
+      <td class="num">1</td>
+      <td class="num">1</td>
+      <td class="num">0</td>
+      <td class="num">0.00</td>
+      <td class="num cov-bad">0.0%</td>
+      <td class="num">0.00</td>
+      <td class="num crap-ok">0.00</td>
+      <td></td>
+    </tr><tr data-crap="0">
+      <td class="mono">Sources/slopguard-cli/Commands/ServeCommand.swift:19</td>
+      <td>Transport</td>
+      <td>enum</td>
+      <td class="num">0</td>
+      <td class="num">0</td>
+      <td class="num">0</td>
+      <td class="num">0.00</td>
+      <td class="num cov-bad">0.0%</td>
+      <td class="num">0.00</td>
+      <td class="num crap-ok">0.00</td>
+      <td></td>
+    </tr><tr data-crap="0">
+      <td class="mono">Sources/slopguard-cli/Commands/VersionCommand.swift:24</td>
+      <td>VersionPayload</td>
+      <td>struct</td>
+      <td class="num">0</td>
+      <td class="num">0</td>
+      <td class="num">0</td>
+      <td class="num">0.00</td>
+      <td class="num cov-bad">0.0%</td>
+      <td class="num">0.00</td>
+      <td class="num crap-ok">0.00</td>
+      <td></td>
+    </tr><tr data-crap="0">
+      <td class="mono">Sources/slopguard-cli/Commands/VersionCommand.swift:5</td>
+      <td>VersionCommand</td>
+      <td>struct</td>
+      <td class="num">1</td>
+      <td class="num">1</td>
+      <td class="num">0</td>
+      <td class="num">0.00</td>
+      <td class="num cov-bad">0.0%</td>
+      <td class="num">0.00</td>
+      <td class="num crap-ok">0.00</td>
+      <td></td>
+    </tr><tr data-crap="0">
+      <td class="mono">Sources/slopguard-cli/Slopguard.swift:9</td>
+      <td>Slopguard</td>
+      <td>struct</td>
+      <td class="num">1</td>
+      <td class="num">1</td>
+      <td class="num">0</td>
+      <td class="num">0.00</td>
+      <td class="num cov-bad">0.0%</td>
+      <td class="num">0.00</td>
+      <td class="num crap-ok">0.00</td>
+      <td></td>
+    </tr><tr data-crap="0">
+      <td class="mono">Sources/slopguard-core/Aggregation/CoverageProvider.swift:6</td>
+      <td>CoverageProvider</td>
+      <td>protocol</td>
+      <td class="num">2</td>
+      <td class="num">2</td>
+      <td class="num">0</td>
+      <td class="num">0.00</td>
+      <td class="num cov-bad">0.0%</td>
+      <td class="num">0.00</td>
+      <td class="num crap-ok">0.00</td>
+      <td></td>
+    </tr><tr data-crap="0">
+      <td class="mono">Sources/slopguard-core/Analysis/ComplexityVisitor.swift:40</td>
+      <td>MethodFrame</td>
+      <td>struct</td>
+      <td class="num">0</td>
+      <td class="num">0</td>
+      <td class="num">0</td>
+      <td class="num">0.00</td>
+      <td class="num cov-bad">0.0%</td>
+      <td class="num">0.00</td>
+      <td class="num crap-ok">0.00</td>
+      <td></td>
+    </tr><tr data-crap="0">
+      <td class="mono">Sources/slopguard-core/Analysis/ComplexityVisitor.swift:52</td>
+      <td>TypeFrame</td>
+      <td>struct</td>
+      <td class="num">0</td>
+      <td class="num">0</td>
+      <td class="num">0</td>
+      <td class="num">0.00</td>
+      <td class="num cov-bad">0.0%</td>
+      <td class="num">0.00</td>
+      <td class="num crap-ok">0.00</td>
+      <td></td>
+    </tr><tr data-crap="0">
+      <td class="mono">Sources/slopguard-core/Analysis/DirectoryAnalyzer.swift:7</td>
+      <td>AnalysisOptions</td>
+      <td>struct</td>
+      <td class="num">1</td>
+      <td class="num">1</td>
+      <td class="num">0</td>
+      <td class="num">0.00</td>
+      <td class="num cov-good">100.0%</td>
+      <td class="num">0.00</td>
+      <td class="num crap-ok">0.00</td>
+      <td></td>
+    </tr><tr data-crap="0">
+      <td class="mono">Sources/slopguard-core/CRAP.swift:49</td>
+      <td>Aggregate</td>
+      <td>struct</td>
+      <td class="num">1</td>
+      <td class="num">1</td>
+      <td class="num">0</td>
+      <td class="num">0.00</td>
+      <td class="num cov-good">100.0%</td>
+      <td class="num">0.00</td>
+      <td class="num crap-ok">0.00</td>
+      <td></td>
+    </tr><tr data-crap="0">
+      <td class="mono">Sources/slopguard-core/Errors/SlopguardError.swift:7</td>
+      <td>CoverageMissingReason</td>
+      <td>enum</td>
+      <td class="num">0</td>
+      <td class="num">0</td>
+      <td class="num">0</td>
+      <td class="num">0.00</td>
+      <td class="num cov-bad">0.0%</td>
+      <td class="num">0.00</td>
+      <td class="num crap-ok">0.00</td>
+      <td></td>
+    </tr><tr data-crap="0">
+      <td class="mono">Sources/slopguard-core/Errors/SlopguardError.swift:105</td>
+      <td>SlopguardErrorEnvelope</td>
+      <td>struct</td>
+      <td class="num">2</td>
+      <td class="num">2</td>
+      <td class="num">0</td>
+      <td class="num">0.00</td>
+      <td class="num cov-good">100.0%</td>
+      <td class="num">0.00</td>
+      <td class="num crap-ok">0.00</td>
+      <td></td>
+    </tr><tr data-crap="0">
+      <td class="mono">Sources/slopguard-core/Models/CrapReport.swift:58</td>
+      <td>Summary</td>
+      <td>struct</td>
+      <td class="num">1</td>
+      <td class="num">1</td>
+      <td class="num">0</td>
+      <td class="num">0.00</td>
+      <td class="num cov-good">100.0%</td>
+      <td class="num">0.00</td>
+      <td class="num crap-ok">0.00</td>
+      <td></td>
+    </tr><tr data-crap="0">
+      <td class="mono">Sources/slopguard-core/Models/CrapReport.swift:5</td>
+      <td>CrapReport</td>
+      <td>struct</td>
+      <td class="num">1</td>
+      <td class="num">1</td>
+      <td class="num">0</td>
+      <td class="num">0.00</td>
+      <td class="num cov-good">100.0%</td>
+      <td class="num">0.00</td>
+      <td class="num crap-ok">0.00</td>
+      <td></td>
+    </tr><tr data-crap="0">
+      <td class="mono">Sources/slopguard-core/Models/CrapReport.swift:100</td>
+      <td>MethodCrap</td>
+      <td>struct</td>
+      <td class="num">1</td>
+      <td class="num">1</td>
+      <td class="num">0</td>
+      <td class="num">0.00</td>
+      <td class="num cov-good">100.0%</td>
+      <td class="num">0.00</td>
+      <td class="num crap-ok">0.00</td>
+      <td></td>
+    </tr><tr data-crap="0">
+      <td class="mono">Sources/slopguard-core/Models/CrapReport.swift:155</td>
+      <td>TypeCrap</td>
+      <td>struct</td>
+      <td class="num">1</td>
+      <td class="num">1</td>
+      <td class="num">0</td>
+      <td class="num">0.00</td>
+      <td class="num cov-good">100.0%</td>
+      <td class="num">0.00</td>
+      <td class="num crap-ok">0.00</td>
+      <td></td>
+    </tr><tr data-crap="0">
+      <td class="mono">Sources/slopguard-core/Models/FileReport.swift:5</td>
+      <td>FileReport</td>
+      <td>struct</td>
+      <td class="num">1</td>
+      <td class="num">1</td>
+      <td class="num">0</td>
+      <td class="num">0.00</td>
+      <td class="num cov-good">100.0%</td>
+      <td class="num">0.00</td>
+      <td class="num crap-ok">0.00</td>
+      <td></td>
+    </tr><tr data-crap="0">
+      <td class="mono">Sources/slopguard-core/Models/MethodMetric.swift:5</td>
+      <td>MethodKind</td>
+      <td>enum</td>
+      <td class="num">0</td>
+      <td class="num">0</td>
+      <td class="num">0</td>
+      <td class="num">0.00</td>
+      <td class="num cov-bad">0.0%</td>
+      <td class="num">0.00</td>
+      <td class="num crap-ok">0.00</td>
+      <td></td>
+    </tr><tr data-crap="0">
+      <td class="mono">Sources/slopguard-core/Models/MethodMetric.swift:17</td>
+      <td>TypeKind</td>
+      <td>enum</td>
+      <td class="num">0</td>
+      <td class="num">0</td>
+      <td class="num">0</td>
+      <td class="num">0.00</td>
+      <td class="num cov-bad">0.0%</td>
+      <td class="num">0.00</td>
+      <td class="num crap-ok">0.00</td>
+      <td></td>
+    </tr><tr data-crap="0">
+      <td class="mono">Sources/slopguard-core/Models/MethodMetric.swift:29</td>
+      <td>MethodMetric</td>
+      <td>struct</td>
+      <td class="num">2</td>
+      <td class="num">2</td>
+      <td class="num">0</td>
+      <td class="num">0.00</td>
+      <td class="num cov-good">100.0%</td>
+      <td class="num">0.00</td>
+      <td class="num crap-ok">0.00</td>
+      <td></td>
+    </tr><tr data-crap="0">
+      <td class="mono">Sources/slopguard-core/Models/TypeMetric.swift:4</td>
+      <td>TypeMetric</td>
+      <td>struct</td>
+      <td class="num">2</td>
+      <td class="num">2</td>
+      <td class="num">0</td>
+      <td class="num">0.00</td>
+      <td class="num cov-good">100.0%</td>
+      <td class="num">0.00</td>
+      <td class="num crap-ok">0.00</td>
+      <td></td>
+    </tr><tr data-crap="0">
+      <td class="mono">Sources/slopguard-core/Version.swift:5</td>
+      <td>SlopguardVersion</td>
+      <td>enum</td>
+      <td class="num">0</td>
+      <td class="num">0</td>
+      <td class="num">0</td>
+      <td class="num">0.00</td>
+      <td class="num cov-bad">0.0%</td>
+      <td class="num">0.00</td>
+      <td class="num crap-ok">0.00</td>
+      <td></td>
+    </tr><tr data-crap="0">
+      <td class="mono">Sources/slopguard-coverage/AnalysisPipeline.swift:41</td>
+      <td>AutoCoverageOptions</td>
+      <td>struct</td>
+      <td class="num">1</td>
+      <td class="num">1</td>
+      <td class="num">0</td>
+      <td class="num">0.00</td>
+      <td class="num cov-good">100.0%</td>
+      <td class="num">0.00</td>
+      <td class="num crap-ok">0.00</td>
+      <td></td>
+    </tr><tr data-crap="0">
+      <td class="mono">Sources/slopguard-coverage/AnalysisPipeline.swift:223</td>
+      <td>Resolved</td>
+      <td>struct</td>
+      <td class="num">1</td>
+      <td class="num">1</td>
+      <td class="num">0</td>
+      <td class="num">0.00</td>
+      <td class="num cov-good">100.0%</td>
+      <td class="num">0.00</td>
+      <td class="num crap-ok">0.00</td>
+      <td></td>
+    </tr><tr data-crap="0">
+      <td class="mono">Sources/slopguard-coverage/CoverageIndex.swift:15</td>
+      <td>FileCoverage</td>
+      <td>struct</td>
+      <td class="num">0</td>
+      <td class="num">0</td>
+      <td class="num">0</td>
+      <td class="num">0.00</td>
+      <td class="num cov-bad">0.0%</td>
+      <td class="num">0.00</td>
+      <td class="num crap-ok">0.00</td>
+      <td></td>
+    </tr><tr data-crap="0">
+      <td class="mono">Sources/slopguard-coverage/CoverageIndex.swift:24</td>
+      <td>FunctionCoverage</td>
+      <td>struct</td>
+      <td class="num">0</td>
+      <td class="num">0</td>
+      <td class="num">0</td>
+      <td class="num">0.00</td>
+      <td class="num cov-bad">0.0%</td>
+      <td class="num">0.00</td>
+      <td class="num crap-ok">0.00</td>
+      <td></td>
+    </tr><tr data-crap="0">
+      <td class="mono">Sources/slopguard-coverage/CoverageIndex.swift:130</td>
+      <td>CoverageIndex</td>
+      <td>extension</td>
+      <td class="num">2</td>
+      <td class="num">2</td>
+      <td class="num">0</td>
+      <td class="num">0.00</td>
+      <td class="num cov-bad">0.0%</td>
+      <td class="num">0.00</td>
+      <td class="num crap-ok">0.00</td>
+      <td></td>
+    </tr><tr data-crap="0">
+      <td class="mono">Sources/slopguard-coverage/ProcessRunner.swift:16</td>
+      <td>Outcome</td>
+      <td>struct</td>
+      <td class="num">0</td>
+      <td class="num">0</td>
+      <td class="num">0</td>
+      <td class="num">0.00</td>
+      <td class="num cov-bad">0.0%</td>
+      <td class="num">0.00</td>
+      <td class="num crap-ok">0.00</td>
+      <td></td>
+    </tr><tr data-crap="0">
+      <td class="mono">Sources/slopguard-coverage/XccovReport.swift:25</td>
+      <td>XccovReport</td>
+      <td>struct</td>
+      <td class="num">0</td>
+      <td class="num">0</td>
+      <td class="num">0</td>
+      <td class="num">0.00</td>
+      <td class="num cov-bad">0.0%</td>
+      <td class="num">0.00</td>
+      <td class="num crap-ok">0.00</td>
+      <td></td>
+    </tr><tr data-crap="0">
+      <td class="mono">Sources/slopguard-coverage/XccovReport.swift:32</td>
+      <td>XccovTarget</td>
+      <td>struct</td>
+      <td class="num">0</td>
+      <td class="num">0</td>
+      <td class="num">0</td>
+      <td class="num">0.00</td>
+      <td class="num cov-bad">0.0%</td>
+      <td class="num">0.00</td>
+      <td class="num crap-ok">0.00</td>
+      <td></td>
+    </tr><tr data-crap="0">
+      <td class="mono">Sources/slopguard-coverage/XccovReport.swift:40</td>
+      <td>XccovFile</td>
+      <td>struct</td>
+      <td class="num">0</td>
+      <td class="num">0</td>
+      <td class="num">0</td>
+      <td class="num">0.00</td>
+      <td class="num cov-bad">0.0%</td>
+      <td class="num">0.00</td>
+      <td class="num crap-ok">0.00</td>
+      <td></td>
+    </tr><tr data-crap="0">
+      <td class="mono">Sources/slopguard-coverage/XccovReport.swift:49</td>
+      <td>XccovFunction</td>
+      <td>struct</td>
+      <td class="num">0</td>
+      <td class="num">0</td>
+      <td class="num">0</td>
+      <td class="num">0.00</td>
+      <td class="num cov-bad">0.0%</td>
+      <td class="num">0.00</td>
+      <td class="num crap-ok">0.00</td>
+      <td></td>
+    </tr><tr data-crap="0">
+      <td class="mono">Sources/slopguard-coverage/XccovRunner.swift:7</td>
+      <td>XccovReporting</td>
+      <td>protocol</td>
+      <td class="num">1</td>
+      <td class="num">1</td>
+      <td class="num">0</td>
+      <td class="num">0.00</td>
+      <td class="num cov-ok">54.1%</td>
+      <td class="num">0.00</td>
+      <td class="num crap-ok">0.00</td>
+      <td></td>
+    </tr><tr data-crap="0">
+      <td class="mono">Sources/slopguard-coverage/XcodebuildRunner.swift:94</td>
+      <td>Container</td>
+      <td>struct</td>
+      <td class="num">0</td>
+      <td class="num">0</td>
+      <td class="num">0</td>
+      <td class="num">0.00</td>
+      <td class="num cov-bad">0.0%</td>
+      <td class="num">0.00</td>
+      <td class="num crap-ok">0.00</td>
+      <td></td>
+    </tr><tr data-crap="0">
+      <td class="mono">Sources/slopguard-coverage/XcodebuildRunner.swift:93</td>
+      <td>Listing</td>
+      <td>struct</td>
+      <td class="num">0</td>
+      <td class="num">0</td>
+      <td class="num">0</td>
+      <td class="num">0.00</td>
+      <td class="num cov-bad">0.0%</td>
+      <td class="num">0.00</td>
+      <td class="num crap-ok">0.00</td>
+      <td></td>
+    </tr><tr data-crap="0">
+      <td class="mono">Sources/slopguard-coverage/XcresultProbe.swift:15</td>
+      <td>XcresultTestProbing</td>
+      <td>protocol</td>
+      <td class="num">1</td>
+      <td class="num">1</td>
+      <td class="num">0</td>
+      <td class="num">0.00</td>
+      <td class="num cov-ok">51.3%</td>
+      <td class="num">0.00</td>
+      <td class="num crap-ok">0.00</td>
+      <td></td>
+    </tr><tr data-crap="0">
+      <td class="mono">Sources/slopguard-mcp/ReportCache.swift:6</td>
+      <td>ReportCache</td>
+      <td>actor</td>
+      <td class="num">4</td>
+      <td class="num">4</td>
+      <td class="num">0</td>
+      <td class="num">0.00</td>
+      <td class="num cov-ok">70.0%</td>
+      <td class="num">0.00</td>
+      <td class="num crap-ok">0.00</td>
+      <td></td>
+    </tr><tr data-crap="0">
+      <td class="mono">Sources/slopguard-mcp/ToolSchemas.swift:7</td>
+      <td>ToolSchemas</td>
+      <td>enum</td>
+      <td class="num">6</td>
+      <td class="num">6</td>
+      <td class="num">0</td>
+      <td class="num">0.00</td>
+      <td class="num cov-good">100.0%</td>
+      <td class="num">0.00</td>
+      <td class="num crap-ok">0.00</td>
+      <td></td>
+    </tr><tr data-crap="0">
+      <td class="mono">Sources/slopguard-mcp/Tools/AnalyzeDirectoryTool.swift:6</td>
+      <td>AnalyzeDirectoryTool</td>
+      <td>enum</td>
+      <td class="num">0</td>
+      <td class="num">0</td>
+      <td class="num">0</td>
+      <td class="num">0.00</td>
+      <td class="num cov-bad">0.0%</td>
+      <td class="num">0.00</td>
+      <td class="num crap-ok">0.00</td>
+      <td></td>
+    </tr><tr data-crap="0">
+      <td class="mono">Sources/slopguard-mcp/Tools/AnalyzeFileTool.swift:6</td>
+      <td>AnalyzeFileTool</td>
+      <td>enum</td>
+      <td class="num">0</td>
+      <td class="num">0</td>
+      <td class="num">0</td>
+      <td class="num">0.00</td>
+      <td class="num cov-bad">0.0%</td>
+      <td class="num">0.00</td>
+      <td class="num crap-ok">0.00</td>
+      <td></td>
+    </tr><tr data-crap="0">
+      <td class="mono">Sources/slopguard-mcp/Tools/FindCrappyCodeTool.swift:6</td>
+      <td>FindCrappyCodeTool</td>
+      <td>enum</td>
+      <td class="num">0</td>
+      <td class="num">0</td>
+      <td class="num">0</td>
+      <td class="num">0.00</td>
+      <td class="num cov-bad">0.0%</td>
+      <td class="num">0.00</td>
+      <td class="num crap-ok">0.00</td>
+      <td></td>
+    </tr><tr data-crap="0">
+      <td class="mono">Sources/slopguard-mcp/Tools/FindCrappyCodeTool.swift:60</td>
+      <td>FindCrappyCodeMethodResponse</td>
+      <td>struct</td>
+      <td class="num">0</td>
+      <td class="num">0</td>
+      <td class="num">0</td>
+      <td class="num">0.00</td>
+      <td class="num cov-bad">0.0%</td>
+      <td class="num">0.00</td>
+      <td class="num crap-ok">0.00</td>
+      <td></td>
+    </tr><tr data-crap="0">
+      <td class="mono">Sources/slopguard-mcp/Tools/FindCrappyCodeTool.swift:67</td>
+      <td>FindCrappyCodeTypeResponse</td>
+      <td>struct</td>
+      <td class="num">0</td>
+      <td class="num">0</td>
+      <td class="num">0</td>
+      <td class="num">0.00</td>
+      <td class="num cov-bad">0.0%</td>
+      <td class="num">0.00</td>
+      <td class="num crap-ok">0.00</td>
+      <td></td>
+    </tr><tr data-crap="0">
+      <td class="mono">Sources/slopguard-mcp/Tools/GetCoverageGapsTool.swift:6</td>
+      <td>GetCoverageGapsTool</td>
+      <td>enum</td>
+      <td class="num">0</td>
+      <td class="num">0</td>
+      <td class="num">0</td>
+      <td class="num">0.00</td>
+      <td class="num cov-bad">0.0%</td>
+      <td class="num">0.00</td>
+      <td class="num crap-ok">0.00</td>
+      <td></td>
+    </tr><tr data-crap="0">
+      <td class="mono">Sources/slopguard-mcp/Tools/GetCoverageGapsTool.swift:54</td>
+      <td>CoverageGapsResponse</td>
+      <td>struct</td>
+      <td class="num">0</td>
+      <td class="num">0</td>
+      <td class="num">0</td>
+      <td class="num">0.00</td>
+      <td class="num cov-bad">0.0%</td>
+      <td class="num">0.00</td>
+      <td class="num crap-ok">0.00</td>
+      <td></td>
+    </tr><tr data-crap="0">
+      <td class="mono">Sources/slopguard-mcp/Tools/GetCrapReportTool.swift:6</td>
+      <td>GetCrapReportTool</td>
+      <td>enum</td>
+      <td class="num">0</td>
+      <td class="num">0</td>
+      <td class="num">0</td>
+      <td class="num">0.00</td>
+      <td class="num cov-bad">0.0%</td>
+      <td class="num">0.00</td>
+      <td class="num crap-ok">0.00</td>
+      <td></td>
+    </tr><tr data-crap="0">
+      <td class="mono">Sources/slopguard-mcp/Tools/SuggestRefactorTool.swift:115</td>
+      <td>Suggestion</td>
+      <td>struct</td>
+      <td class="num">0</td>
+      <td class="num">0</td>
+      <td class="num">0</td>
+      <td class="num">0.00</td>
+      <td class="num cov-bad">0.0%</td>
+      <td class="num">0.00</td>
+      <td class="num crap-ok">0.00</td>
+      <td></td>
+    </tr><tr data-crap="0">
+      <td class="mono">Sources/slopguard-mcp/Tools/SuggestRefactorTool.swift:123</td>
+      <td>SuggestRefactorResponse</td>
+      <td>struct</td>
+      <td class="num">0</td>
+      <td class="num">0</td>
+      <td class="num">0</td>
+      <td class="num">0.00</td>
+      <td class="num cov-bad">0.0%</td>
+      <td class="num">0.00</td>
+      <td class="num crap-ok">0.00</td>
+      <td></td>
+    </tr><tr data-crap="0">
+      <td class="mono">Sources/slopguard-mcp/Tools/SuggestRefactorTool.swift:128</td>
+      <td>String.StringInterpolation</td>
+      <td>extension</td>
+      <td class="num">1</td>
+      <td class="num">1</td>
+      <td class="num">0</td>
+      <td class="num">0.00</td>
+      <td class="num cov-good">100.0%</td>
+      <td class="num">0.00</td>
+      <td class="num crap-ok">0.00</td>
+      <td></td>
+    </tr><tr data-crap="0">
+      <td class="mono">Sources/slopguard-mcp/Tools/ToolDefinition.swift:7</td>
+      <td>ToolDefinition</td>
+      <td>struct</td>
+      <td class="num">1</td>
+      <td class="num">1</td>
+      <td class="num">0</td>
+      <td class="num">0.00</td>
+      <td class="num cov-good">100.0%</td>
+      <td class="num">0.00</td>
+      <td class="num crap-ok">0.00</td>
+      <td></td>
+    </tr></tbody>
+  </table>
+</section>
+
+<section>
+  <h2>Methods (188) — sorted by wCRAP</h2>
+  <div class="controls">
+    <input id="methodFilter" placeholder="Filter methods by name or file…">
+    <label><input type="checkbox" id="onlyCrappy"> only crappy</label>
+  </div>
+  <table id="methodTable">
+    <thead><tr>
+      <th>Location</th><th>Qualified name</th><th>Kind</th>
+      <th class="num">Cyc</th><th class="num">Cog</th><th class="num">Weighted</th>
+      <th class="num">Coverage</th><th class="num">wCRAP</th><th></th>
+    </tr></thead>
+    <tbody><tr data-crap="20" data-cov="0" data-cyc="4">
+      <td class="mono">Sources/slopguard-mcp/SlopguardMCPServer.swift:53</td>
+      <td>SlopguardMCPServer.registerHandlers()</td>
+      <td>function</td>
+      <td class="num">4</td>
+      <td class="num">4</td>
+      <td class="num">4.00</td>
+      <td class="num cov-bad">0.0%</td>
+      <td class="num crap-warn">20.00</td>
+      <td></td>
+    </tr><tr data-crap="15.968719422671311" data-cov="100" data-cyc="17">
+      <td class="mono">Sources/slopguard-core/Aggregation/CrapAggregator.swift:19</td>
+      <td>CrapAggregator.aggregate(fileReports:sourceRootURL:xcresultPath:threshold:coverage:notes:)</td>
+      <td>function</td>
+      <td class="num">17</td>
+      <td class="num">15</td>
+      <td class="num">15.97</td>
+      <td class="num cov-good">100.0%</td>
+      <td class="num crap-warn">15.97</td>
+      <td></td>
+    </tr><tr data-crap="13.490737563232042" data-cov="100" data-cyc="14">
+      <td class="mono">Sources/slopguard-mcp/Tools/SuggestRefactorTool.swift:55</td>
+      <td>SuggestRefactorTool.makeSuggestions(for:)</td>
+      <td>function</td>
+      <td class="num">14</td>
+      <td class="num">13</td>
+      <td class="num">13.49</td>
+      <td class="num cov-good">100.0%</td>
+      <td class="num crap-ok">13.49</td>
+      <td></td>
+    </tr><tr data-crap="10.828427124746192" data-cov="0" data-cyc="4">
+      <td class="mono">Sources/slopguard-coverage/XcodebuildRunner.swift:64</td>
+      <td>XcodebuildRunner.discoverDefaultScheme(projectDirectory:)</td>
+      <td>function</td>
+      <td class="num">4</td>
+      <td class="num">2</td>
+      <td class="num">2.83</td>
+      <td class="num cov-bad">0.0%</td>
+      <td class="num crap-ok">10.83</td>
+      <td></td>
+    </tr><tr data-crap="8.449489742783177" data-cov="0" data-cyc="3">
+      <td class="mono">Sources/slopguard-coverage/XcodebuildRunner.swift:115</td>
+      <td>XcodebuildRunner.runXcodebuildTest(scheme:destination:projectDirectory:resultBundlePath:)</td>
+      <td>function</td>
+      <td class="num">3</td>
+      <td class="num">2</td>
+      <td class="num">2.45</td>
+      <td class="num cov-bad">0.0%</td>
+      <td class="num crap-ok">8.45</td>
+      <td></td>
+    </tr><tr data-crap="8.034326441152654" data-cov="79.59183673469387" data-cyc="19">
+      <td class="mono">Sources/slopguard-core/Errors/SlopguardError.swift:53</td>
+      <td>SlopguardError.info.get</td>
+      <td>getter</td>
+      <td class="num">19</td>
+      <td class="num">3</td>
+      <td class="num">7.55</td>
+      <td class="num cov-ok">79.6%</td>
+      <td class="num crap-ok">8.03</td>
+      <td></td>
+    </tr><tr data-crap="6.934203230275509" data-cov="95" data-cyc="6">
+      <td class="mono">Sources/slopguard-core/Analysis/DirectoryAnalyzer.swift:113</td>
+      <td>DirectoryAnalyzer.enumerateSwiftFiles(under:options:)</td>
+      <td>function</td>
+      <td class="num">6</td>
+      <td class="num">8</td>
+      <td class="num">6.93</td>
+      <td class="num cov-good">95.0%</td>
+      <td class="num crap-ok">6.93</td>
+      <td></td>
+    </tr><tr data-crap="6.006172839506172" data-cov="94.44444444444444" data-cyc="6">
+      <td class="mono">Sources/slopguard-coverage/ProjectRootDiscovery.swift:61</td>
+      <td>ProjectRootDiscovery.hasMarker(_:fileManager:)</td>
+      <td>function</td>
+      <td class="num">6</td>
+      <td class="num">6</td>
+      <td class="num">6.00</td>
+      <td class="num cov-good">94.4%</td>
+      <td class="num crap-ok">6.01</td>
+      <td></td>
+    </tr><tr data-crap="6.0045" data-cov="95" data-cyc="6">
+      <td class="mono">Sources/slopguard-cli/Commands/AnalyzeCommand.swift:61</td>
+      <td>AnalyzeCommand.run()</td>
+      <td>function</td>
+      <td class="num">6</td>
+      <td class="num">6</td>
+      <td class="num">6.00</td>
+      <td class="num cov-good">95.0%</td>
+      <td class="num crap-ok">6.00</td>
+      <td></td>
+    </tr><tr data-crap="6" data-cov="0" data-cyc="2">
+      <td class="mono">Sources/slopguard-coverage/XcodebuildRunner.swift:29</td>
+      <td>XcodebuildRunner.runTests(scheme:destination:projectDirectory:resultBundleURL:)</td>
+      <td>function</td>
+      <td class="num">2</td>
+      <td class="num">2</td>
+      <td class="num">2.00</td>
+      <td class="num cov-bad">0.0%</td>
+      <td class="num crap-ok">6.00</td>
+      <td></td>
+    </tr><tr data-crap="5.477225575051661" data-cov="100" data-cyc="5">
+      <td class="mono">Sources/slopguard-core/Analysis/ComplexityVisitor.swift:212</td>
+      <td>ComplexityVisitor.visit(_:)</td>
+      <td>function</td>
+      <td class="num">5</td>
+      <td class="num">6</td>
+      <td class="num">5.48</td>
+      <td class="num cov-good">100.0%</td>
+      <td class="num crap-ok">5.48</td>
+      <td></td>
+    </tr><tr data-crap="5.477225575051661" data-cov="100" data-cyc="5">
+      <td class="mono">Sources/slopguard-core/Formatting/CrapReportFormatter.swift:95</td>
+      <td>CrapReportFormatter.topMethodsByCrap(_:topN:)</td>
+      <td>function</td>
+      <td class="num">5</td>
+      <td class="num">6</td>
+      <td class="num">5.48</td>
+      <td class="num cov-good">100.0%</td>
+      <td class="num crap-ok">5.48</td>
+      <td></td>
+    </tr><tr data-crap="5.477225575051661" data-cov="100" data-cyc="6">
+      <td class="mono">Sources/slopguard-coverage/CoverageIndex.swift:79</td>
+      <td>CoverageIndex.coverage(forAbsolutePath:line:endLine:)</td>
+      <td>function</td>
+      <td class="num">6</td>
+      <td class="num">5</td>
+      <td class="num">5.48</td>
+      <td class="num cov-good">100.0%</td>
+      <td class="num crap-ok">5.48</td>
+      <td></td>
+    </tr><tr data-crap="5.477225575051661" data-cov="100" data-cyc="6">
+      <td class="mono">Sources/slopguard-coverage/CoverageIndex.swift:106</td>
+      <td>CoverageIndex.lookupFile(absolutePath:)</td>
+      <td>function</td>
+      <td class="num">6</td>
+      <td class="num">5</td>
+      <td class="num">5.48</td>
+      <td class="num cov-good">100.0%</td>
+      <td class="num crap-ok">5.48</td>
+      <td></td>
+    </tr><tr data-crap="5.477225575051661" data-cov="100" data-cyc="5">
+      <td class="mono">Sources/slopguard-coverage/ProjectRootDiscovery.swift:34</td>
+      <td>ProjectRootDiscovery.discover(searchingFrom:)</td>
+      <td>function</td>
+      <td class="num">5</td>
+      <td class="num">6</td>
+      <td class="num">5.48</td>
+      <td class="num cov-good">100.0%</td>
+      <td class="num crap-ok">5.48</td>
+      <td></td>
+    </tr><tr data-crap="4.919711587931111" data-cov="90.47619047619048" data-cyc="4">
+      <td class="mono">Sources/slopguard-coverage/AnalysisPipeline.swift:107</td>
+      <td>AnalysisPipeline.run(sourceURL:coverage:threshold:options:)</td>
+      <td>function</td>
+      <td class="num">4</td>
+      <td class="num">6</td>
+      <td class="num">4.90</td>
+      <td class="num cov-good">90.5%</td>
+      <td class="num crap-ok">4.92</td>
+      <td></td>
+    </tr><tr data-crap="4.903094711903805" data-cov="94.44444444444444" data-cyc="6">
+      <td class="mono">Sources/slopguard-coverage/XcresultProbe.swift:95</td>
+      <td>XcresultProbe.countTestCases(legacyJSON:)</td>
+      <td>function</td>
+      <td class="num">6</td>
+      <td class="num">4</td>
+      <td class="num">4.90</td>
+      <td class="num cov-good">94.4%</td>
+      <td class="num crap-ok">4.90</td>
+      <td></td>
+    </tr><tr data-crap="4.898979485566356" data-cov="100" data-cyc="6">
+      <td class="mono">Sources/slopguard-core/Analysis/ComplexityVisitor.swift:334</td>
+      <td>ComplexityVisitor.visit(_:)</td>
+      <td>function</td>
+      <td class="num">6</td>
+      <td class="num">4</td>
+      <td class="num">4.90</td>
+      <td class="num cov-good">100.0%</td>
+      <td class="num crap-ok">4.90</td>
+      <td></td>
+    </tr><tr data-crap="4.732050807568877" data-cov="0" data-cyc="3">
+      <td class="mono">Sources/slopguard-cli/Commands/ServeCommand.swift:33</td>
+      <td>ServeCommand.run()</td>
+      <td>function</td>
+      <td class="num">3</td>
+      <td class="num">1</td>
+      <td class="num">1.73</td>
+      <td class="num cov-bad">0.0%</td>
+      <td class="num crap-ok">4.73</td>
+      <td></td>
+    </tr><tr data-crap="4.47213595499958" data-cov="100" data-cyc="4">
+      <td class="mono">Sources/slopguard-core/Analysis/DirectoryAnalyzer.swift:174</td>
+      <td>matchesAny(_:path:)</td>
+      <td>function</td>
+      <td class="num">4</td>
+      <td class="num">5</td>
+      <td class="num">4.47</td>
+      <td class="num cov-good">100.0%</td>
+      <td class="num crap-ok">4.47</td>
+      <td></td>
+    </tr><tr data-crap="4.47213595499958" data-cov="100" data-cyc="4">
+      <td class="mono">Sources/slopguard-coverage/XcresultProbe.swift:76</td>
+      <td>XcresultProbe.walkTestNodes(_:)</td>
+      <td>function</td>
+      <td class="num">4</td>
+      <td class="num">5</td>
+      <td class="num">4.47</td>
+      <td class="num cov-good">100.0%</td>
+      <td class="num crap-ok">4.47</td>
+      <td></td>
+    </tr><tr data-crap="4" data-cov="100" data-cyc="4">
+      <td class="mono">Sources/slopguard-coverage/CoverageIndex.swift:140</td>
+      <td>sharedSuffixLength(_:_:)</td>
+      <td>function</td>
+      <td class="num">4</td>
+      <td class="num">4</td>
+      <td class="num">4.00</td>
+      <td class="num cov-good">100.0%</td>
+      <td class="num crap-ok">4.00</td>
+      <td></td>
+    </tr><tr data-crap="3.872983346207417" data-cov="100" data-cyc="5">
+      <td class="mono">Sources/slopguard-core/Analysis/DirectoryAnalyzer.swift:148</td>
+      <td>DirectoryAnalyzer.shouldAnalyze(file:relative:options:)</td>
+      <td>function</td>
+      <td class="num">5</td>
+      <td class="num">3</td>
+      <td class="num">3.87</td>
+      <td class="num cov-good">100.0%</td>
+      <td class="num crap-ok">3.87</td>
+      <td></td>
+    </tr><tr data-crap="3.4875391151377544" data-cov="87.5" data-cyc="4">
+      <td class="mono">Sources/slopguard-core/Analysis/DirectoryAnalyzer.swift:183</td>
+      <td>relativize(_:under:)</td>
+      <td>function</td>
+      <td class="num">4</td>
+      <td class="num">3</td>
+      <td class="num">3.46</td>
+      <td class="num cov-good">87.5%</td>
+      <td class="num crap-ok">3.49</td>
+      <td></td>
+    </tr><tr data-crap="3.4641016151377544" data-cov="100" data-cyc="4">
+      <td class="mono">Sources/slopguard-core/Analysis/ComplexityVisitor.swift:321</td>
+      <td>ComplexityVisitor.visit(_:)</td>
+      <td>function</td>
+      <td class="num">4</td>
+      <td class="num">3</td>
+      <td class="num">3.46</td>
+      <td class="num cov-good">100.0%</td>
+      <td class="num crap-ok">3.46</td>
+      <td></td>
+    </tr><tr data-crap="3.4641016151377544" data-cov="100" data-cyc="3">
+      <td class="mono">Sources/slopguard-core/Analysis/DirectoryAnalyzer.swift:93</td>
+      <td>DirectoryAnalyzer.analyzeInParallel(files:rootPrefix:)</td>
+      <td>function</td>
+      <td class="num">3</td>
+      <td class="num">4</td>
+      <td class="num">3.46</td>
+      <td class="num cov-good">100.0%</td>
+      <td class="num crap-ok">3.46</td>
+      <td></td>
+    </tr><tr data-crap="3.4316889541696005" data-cov="37.93103448275862" data-cyc="5">
+      <td class="mono">Sources/slopguard-coverage/AnalysisPipeline.swift:189</td>
+      <td>AnalysisPipeline.resolveCoverage(_:sourceURL:)</td>
+      <td>function</td>
+      <td class="num">5</td>
+      <td class="num">1</td>
+      <td class="num">2.24</td>
+      <td class="num cov-bad">37.9%</td>
+      <td class="num crap-ok">3.43</td>
+      <td></td>
+    </tr><tr data-crap="3.414213562373096" data-cov="0" data-cyc="2">
+      <td class="mono">Sources/slopguard-cli/Commands/ServeCommand.swift:45</td>
+      <td>ServeCommand.runStdio()</td>
+      <td>function</td>
+      <td class="num">2</td>
+      <td class="num">1</td>
+      <td class="num">1.41</td>
+      <td class="num cov-bad">0.0%</td>
+      <td class="num crap-ok">3.41</td>
+      <td></td>
+    </tr><tr data-crap="3.414213562373096" data-cov="0" data-cyc="2">
+      <td class="mono">Sources/slopguard-coverage/XcodebuildRunner.swift:157</td>
+      <td>XcodebuildRunner.launch(_:)</td>
+      <td>function</td>
+      <td class="num">2</td>
+      <td class="num">1</td>
+      <td class="num">1.41</td>
+      <td class="num cov-bad">0.0%</td>
+      <td class="num crap-ok">3.41</td>
+      <td></td>
+    </tr><tr data-crap="3.414213562373096" data-cov="0" data-cyc="2">
+      <td class="mono">Sources/slopguard-coverage/XcresultProbe.swift:35</td>
+      <td>XcresultProbe.probe(xcresultPath:)</td>
+      <td>function</td>
+      <td class="num">2</td>
+      <td class="num">1</td>
+      <td class="num">1.41</td>
+      <td class="num cov-bad">0.0%</td>
+      <td class="num crap-ok">3.41</td>
+      <td></td>
+    </tr><tr data-crap="3.1622776601683795" data-cov="100" data-cyc="5">
+      <td class="mono">Sources/slopguard-coverage/ProcessRunner.swift:26</td>
+      <td>ProcessRunner.run(executable:arguments:cwd:launchError:)</td>
+      <td>function</td>
+      <td class="num">5</td>
+      <td class="num">2</td>
+      <td class="num">3.16</td>
+      <td class="num cov-good">100.0%</td>
+      <td class="num crap-ok">3.16</td>
+      <td></td>
+    </tr><tr data-crap="3.0018318746183597" data-cov="94.11764705882352" data-cyc="3">
+      <td class="mono">Sources/slopguard-core/Formatting/CrapReportFormatter.swift:50</td>
+      <td>CrapReportFormatter.header(_:)</td>
+      <td>function</td>
+      <td class="num">3</td>
+      <td class="num">3</td>
+      <td class="num">3.00</td>
+      <td class="num cov-good">94.1%</td>
+      <td class="num crap-ok">3.00</td>
+      <td></td>
+    </tr><tr data-crap="3" data-cov="100" data-cyc="3">
+      <td class="mono">Sources/slopguard-core/CRAP.swift:64</td>
+      <td>CRAP.aggregate(_:)</td>
+      <td>function</td>
+      <td class="num">3</td>
+      <td class="num">3</td>
+      <td class="num">3.00</td>
+      <td class="num cov-good">100.0%</td>
+      <td class="num crap-ok">3.00</td>
+      <td></td>
+    </tr><tr data-crap="3" data-cov="100" data-cyc="3">
+      <td class="mono">Sources/slopguard-coverage/CoverageIndex.swift:39</td>
+      <td>CoverageIndex.init(report:)</td>
+      <td>initializer</td>
+      <td class="num">3</td>
+      <td class="num">3</td>
+      <td class="num">3.00</td>
+      <td class="num cov-good">100.0%</td>
+      <td class="num crap-ok">3.00</td>
+      <td></td>
+    </tr><tr data-crap="2.8284271247461903" data-cov="100" data-cyc="4">
+      <td class="mono">Sources/slopguard-core/Aggregation/CrapAggregator.swift:183</td>
+      <td>CrapAggregator.weightedCoverage(_:)</td>
+      <td>function</td>
+      <td class="num">4</td>
+      <td class="num">2</td>
+      <td class="num">2.83</td>
+      <td class="num cov-good">100.0%</td>
+      <td class="num crap-ok">2.83</td>
+      <td></td>
+    </tr><tr data-crap="2.449489742783178" data-cov="100" data-cyc="3">
+      <td class="mono">Sources/slopguard-core/Aggregation/CrapAggregator.swift:196</td>
+      <td>absolutize(rootAbsolute:relative:)</td>
+      <td>function</td>
+      <td class="num">3</td>
+      <td class="num">2</td>
+      <td class="num">2.45</td>
+      <td class="num cov-good">100.0%</td>
+      <td class="num crap-ok">2.45</td>
+      <td></td>
+    </tr><tr data-crap="2.449489742783178" data-cov="100" data-cyc="3">
+      <td class="mono">Sources/slopguard-core/Analysis/ComplexityVisitor.swift:199</td>
+      <td>ComplexityVisitor.visitPost(_:)</td>
+      <td>function</td>
+      <td class="num">3</td>
+      <td class="num">2</td>
+      <td class="num">2.45</td>
+      <td class="num cov-good">100.0%</td>
+      <td class="num crap-ok">2.45</td>
+      <td></td>
+    </tr><tr data-crap="2.449489742783178" data-cov="100" data-cyc="3">
+      <td class="mono">Sources/slopguard-coverage/AnalysisPipeline.swift:71</td>
+      <td>AnalysisPipeline.CoverageSource.fromFlags(noCoverage:xcresult:scheme:destination:projectDir:cwd:)</td>
+      <td>function</td>
+      <td class="num">3</td>
+      <td class="num">2</td>
+      <td class="num">2.45</td>
+      <td class="num cov-good">100.0%</td>
+      <td class="num crap-ok">2.45</td>
+      <td></td>
+    </tr><tr data-crap="2.449489742783178" data-cov="100" data-cyc="3">
+      <td class="mono">Sources/slopguard-mcp/Tools/ToolDefinition.swift:85</td>
+      <td>ToolUtilities.double(_:_:)</td>
+      <td>function</td>
+      <td class="num">3</td>
+      <td class="num">2</td>
+      <td class="num">2.45</td>
+      <td class="num cov-good">100.0%</td>
+      <td class="num crap-ok">2.45</td>
+      <td></td>
+    </tr><tr data-crap="2.449489742783178" data-cov="100" data-cyc="3">
+      <td class="mono">Sources/slopguard-mcp/Tools/ToolDefinition.swift:91</td>
+      <td>ToolUtilities.int(_:_:)</td>
+      <td>function</td>
+      <td class="num">3</td>
+      <td class="num">2</td>
+      <td class="num">2.45</td>
+      <td class="num cov-good">100.0%</td>
+      <td class="num crap-ok">2.45</td>
+      <td></td>
+    </tr><tr data-crap="2.449489742783178" data-cov="100" data-cyc="3">
+      <td class="mono">Sources/slopguard-mcp/Tools/ToolDefinition.swift:110</td>
+      <td>ToolUtilities.autoCoverage(_:)</td>
+      <td>function</td>
+      <td class="num">3</td>
+      <td class="num">2</td>
+      <td class="num">2.45</td>
+      <td class="num cov-good">100.0%</td>
+      <td class="num crap-ok">2.45</td>
+      <td></td>
+    </tr><tr data-crap="2.1481481481481484" data-cov="66.66666666666666" data-cyc="2">
+      <td class="mono">Sources/slopguard-cli/Commands/AnalyzeCommand.swift:114</td>
+      <td>AnalyzeCommand.emitError(_:)</td>
+      <td>function</td>
+      <td class="num">2</td>
+      <td class="num">2</td>
+      <td class="num">2.00</td>
+      <td class="num cov-ok">66.7%</td>
+      <td class="num crap-ok">2.15</td>
+      <td></td>
+    </tr><tr data-crap="2" data-cov="100" data-cyc="2">
+      <td class="mono">Sources/slopguard-core/Analysis/ComplexityVisitor.swift:400</td>
+      <td>ComplexityVisitor.pushMethod(name:kind:range:)</td>
+      <td>function</td>
+      <td class="num">2</td>
+      <td class="num">2</td>
+      <td class="num">2.00</td>
+      <td class="num cov-good">100.0%</td>
+      <td class="num crap-ok">2.00</td>
+      <td></td>
+    </tr><tr data-crap="2" data-cov="100" data-cyc="2">
+      <td class="mono">Sources/slopguard-core/Analysis/ComplexityVisitor.swift:471</td>
+      <td>ComplexityVisitor.parameterLabels(_:)</td>
+      <td>function</td>
+      <td class="num">2</td>
+      <td class="num">2</td>
+      <td class="num">2.00</td>
+      <td class="num cov-good">100.0%</td>
+      <td class="num crap-ok">2.00</td>
+      <td></td>
+    </tr><tr data-crap="2" data-cov="100" data-cyc="2">
+      <td class="mono">Sources/slopguard-core/Formatting/CrapReportFormatter.swift:76</td>
+      <td>CrapReportFormatter.summary(_:)</td>
+      <td>function</td>
+      <td class="num">2</td>
+      <td class="num">2</td>
+      <td class="num">2.00</td>
+      <td class="num cov-good">100.0%</td>
+      <td class="num crap-ok">2.00</td>
+      <td></td>
+    </tr><tr data-crap="2" data-cov="100" data-cyc="4">
+      <td class="mono">Sources/slopguard-coverage/AnalysisPipeline.swift:167</td>
+      <td>AnalysisPipeline.noteText(for:)</td>
+      <td>function</td>
+      <td class="num">4</td>
+      <td class="num">1</td>
+      <td class="num">2.00</td>
+      <td class="num cov-good">100.0%</td>
+      <td class="num crap-ok">2.00</td>
+      <td></td>
+    </tr><tr data-crap="2" data-cov="100" data-cyc="4">
+      <td class="mono">Sources/slopguard-coverage/XcodebuildRunner.swift:89</td>
+      <td>XcodebuildRunner.decodeSchemes(data:)</td>
+      <td>function</td>
+      <td class="num">4</td>
+      <td class="num">1</td>
+      <td class="num">2.00</td>
+      <td class="num cov-good">100.0%</td>
+      <td class="num crap-ok">2.00</td>
+      <td></td>
+    </tr><tr data-crap="1.735050807568877" data-cov="90" data-cyc="3">
+      <td class="mono">Sources/slopguard-core/Analysis/SwiftFileAnalyzer.swift:18</td>
+      <td>SwiftFileAnalyzer.analyze(url:reportedPath:)</td>
+      <td>function</td>
+      <td class="num">3</td>
+      <td class="num">1</td>
+      <td class="num">1.73</td>
+      <td class="num cov-good">90.0%</td>
+      <td class="num crap-ok">1.74</td>
+      <td></td>
+    </tr><tr data-crap="1.7320508075688772" data-cov="100" data-cyc="3">
+      <td class="mono">Sources/slopguard-core/Analysis/ComplexityVisitor.swift:424</td>
+      <td>ComplexityVisitor.popMethod()</td>
+      <td>function</td>
+      <td class="num">3</td>
+      <td class="num">1</td>
+      <td class="num">1.73</td>
+      <td class="num cov-good">100.0%</td>
+      <td class="num crap-ok">1.73</td>
+      <td></td>
+    </tr><tr data-crap="1.7320508075688772" data-cov="100" data-cyc="3">
+      <td class="mono">Sources/slopguard-core/Analysis/DirectoryAnalyzer.swift:81</td>
+      <td>DirectoryAnalyzer.resolveFileSet(rootURL:options:)</td>
+      <td>function</td>
+      <td class="num">3</td>
+      <td class="num">1</td>
+      <td class="num">1.73</td>
+      <td class="num cov-good">100.0%</td>
+      <td class="num crap-ok">1.73</td>
+      <td></td>
+    </tr><tr data-crap="1.7320508075688772" data-cov="100" data-cyc="3">
+      <td class="mono">Sources/slopguard-coverage/AnalysisPipeline.swift:160</td>
+      <td>AnalysisPipeline.disambiguateMissingCoverage(xcresultURL:)</td>
+      <td>function</td>
+      <td class="num">3</td>
+      <td class="num">1</td>
+      <td class="num">1.73</td>
+      <td class="num cov-good">100.0%</td>
+      <td class="num crap-ok">1.73</td>
+      <td></td>
+    </tr><tr data-crap="1.7320508075688772" data-cov="100" data-cyc="3">
+      <td class="mono">Sources/slopguard-mcp/Tools/ToolDefinition.swift:101</td>
+      <td>ToolUtilities.stringArray(_:_:)</td>
+      <td>function</td>
+      <td class="num">3</td>
+      <td class="num">1</td>
+      <td class="num">1.73</td>
+      <td class="num cov-good">100.0%</td>
+      <td class="num crap-ok">1.73</td>
+      <td></td>
+    </tr><tr data-crap="1.4454635623730951" data-cov="75" data-cyc="2">
+      <td class="mono">Sources/slopguard-cli/Commands/AnalyzeCommand.swift:135</td>
+      <td>resolvePath(_:)</td>
+      <td>function</td>
+      <td class="num">2</td>
+      <td class="num">1</td>
+      <td class="num">1.41</td>
+      <td class="num cov-ok">75.0%</td>
+      <td class="num crap-ok">1.45</td>
+      <td></td>
+    </tr><tr data-crap="1.4142135623730951" data-cov="100" data-cyc="2">
+      <td class="mono">Sources/slopguard-core/Analysis/ComplexityVisitor.swift:183</td>
+      <td>ComplexityVisitor.visit(_:)</td>
+      <td>function</td>
+      <td class="num">2</td>
+      <td class="num">1</td>
+      <td class="num">1.41</td>
+      <td class="num cov-good">100.0%</td>
+      <td class="num crap-ok">1.41</td>
+      <td></td>
+    </tr><tr data-crap="1.4142135623730951" data-cov="100" data-cyc="2">
+      <td class="mono">Sources/slopguard-core/Analysis/ComplexityVisitor.swift:293</td>
+      <td>ComplexityVisitor.visit(_:)</td>
+      <td>function</td>
+      <td class="num">2</td>
+      <td class="num">1</td>
+      <td class="num">1.41</td>
+      <td class="num cov-good">100.0%</td>
+      <td class="num crap-ok">1.41</td>
+      <td></td>
+    </tr><tr data-crap="1.4142135623730951" data-cov="100" data-cyc="2">
+      <td class="mono">Sources/slopguard-core/Analysis/DirectoryAnalyzer.swift:134</td>
+      <td>DirectoryAnalyzer.makeEnumerator(at:options:)</td>
+      <td>function</td>
+      <td class="num">2</td>
+      <td class="num">1</td>
+      <td class="num">1.41</td>
+      <td class="num cov-good">100.0%</td>
+      <td class="num crap-ok">1.41</td>
+      <td></td>
+    </tr><tr data-crap="1.4142135623730951" data-cov="100" data-cyc="2">
+      <td class="mono">Sources/slopguard-core/Formatting/CrapReportFormatter.swift:12</td>
+      <td>CrapReportFormatter.pretty(_:topN:)</td>
+      <td>function</td>
+      <td class="num">2</td>
+      <td class="num">1</td>
+      <td class="num">1.41</td>
+      <td class="num cov-good">100.0%</td>
+      <td class="num crap-ok">1.41</td>
+      <td></td>
+    </tr><tr data-crap="1.4142135623730951" data-cov="100" data-cyc="2">
+      <td class="mono">Sources/slopguard-core/Formatting/CrapReportFormatter.swift:28</td>
+      <td>CrapReportFormatter.json(_:prettyPrinted:)</td>
+      <td>function</td>
+      <td class="num">2</td>
+      <td class="num">1</td>
+      <td class="num">1.41</td>
+      <td class="num cov-good">100.0%</td>
+      <td class="num crap-ok">1.41</td>
+      <td></td>
+    </tr><tr data-crap="1.4142135623730951" data-cov="100" data-cyc="2">
+      <td class="mono">Sources/slopguard-core/Formatting/CrapReportFormatter.swift:68</td>
+      <td>CrapReportFormatter.notes(_:)</td>
+      <td>function</td>
+      <td class="num">2</td>
+      <td class="num">1</td>
+      <td class="num">1.41</td>
+      <td class="num cov-good">100.0%</td>
+      <td class="num crap-ok">1.41</td>
+      <td></td>
+    </tr><tr data-crap="1.4142135623730951" data-cov="100" data-cyc="2">
+      <td class="mono">Sources/slopguard-coverage/AnalysisPipeline.swift:97</td>
+      <td>AnalysisPipeline.CoverageSource.resolveURL(_:cwd:)</td>
+      <td>function</td>
+      <td class="num">2</td>
+      <td class="num">1</td>
+      <td class="num">1.41</td>
+      <td class="num cov-good">100.0%</td>
+      <td class="num crap-ok">1.41</td>
+      <td></td>
+    </tr><tr data-crap="1.4142135623730951" data-cov="100" data-cyc="2">
+      <td class="mono">Sources/slopguard-coverage/XccovRunner.swift:50</td>
+      <td>XccovRunner.mapFailure(exitCode:stderr:)</td>
+      <td>function</td>
+      <td class="num">2</td>
+      <td class="num">1</td>
+      <td class="num">1.41</td>
+      <td class="num cov-good">100.0%</td>
+      <td class="num crap-ok">1.41</td>
+      <td></td>
+    </tr><tr data-crap="1.4142135623730951" data-cov="100" data-cyc="2">
+      <td class="mono">Sources/slopguard-coverage/XccovRunner.swift:57</td>
+      <td>XccovRunner.decode(data:)</td>
+      <td>function</td>
+      <td class="num">2</td>
+      <td class="num">1</td>
+      <td class="num">1.41</td>
+      <td class="num cov-good">100.0%</td>
+      <td class="num crap-ok">1.41</td>
+      <td></td>
+    </tr><tr data-crap="1.4142135623730951" data-cov="100" data-cyc="2">
+      <td class="mono">Sources/slopguard-mcp/Tools/ToolDefinition.swift:72</td>
+      <td>ToolUtilities.resolvePath(_:)</td>
+      <td>function</td>
+      <td class="num">2</td>
+      <td class="num">1</td>
+      <td class="num">1.41</td>
+      <td class="num cov-good">100.0%</td>
+      <td class="num crap-ok">1.41</td>
+      <td></td>
+    </tr><tr data-crap="0" data-cov="0" data-cyc="1">
+      <td class="mono">Sources/slopguard-cli-bin/SlopguardMain.swift:6</td>
+      <td>SlopguardMain.main()</td>
+      <td>function</td>
+      <td class="num">1</td>
+      <td class="num">0</td>
+      <td class="num">0.00</td>
+      <td class="num cov-bad">0.0%</td>
+      <td class="num crap-ok">0.00</td>
+      <td></td>
+    </tr><tr data-crap="0" data-cov="100" data-cyc="1">
+      <td class="mono">Sources/slopguard-cli/Commands/AnalyzeCommand.swift:104</td>
+      <td>AnalyzeCommand.emitJSON(_:)</td>
+      <td>function</td>
+      <td class="num">1</td>
+      <td class="num">0</td>
+      <td class="num">0.00</td>
+      <td class="num cov-good">100.0%</td>
+      <td class="num crap-ok">0.00</td>
+      <td></td>
+    </tr><tr data-crap="0" data-cov="100" data-cyc="1">
+      <td class="mono">Sources/slopguard-cli/Commands/AnalyzeCommand.swift:110</td>
+      <td>AnalyzeCommand.emitPretty(_:)</td>
+      <td>function</td>
+      <td class="num">1</td>
+      <td class="num">0</td>
+      <td class="num">0.00</td>
+      <td class="num cov-good">100.0%</td>
+      <td class="num crap-ok">0.00</td>
+      <td></td>
+    </tr><tr data-crap="0" data-cov="100" data-cyc="1">
+      <td class="mono">Sources/slopguard-cli/Commands/AnalyzeCommand.swift:124</td>
+      <td>AnalyzeCommand.resolveCoverageSource()</td>
+      <td>function</td>
+      <td class="num">1</td>
+      <td class="num">0</td>
+      <td class="num">0.00</td>
+      <td class="num cov-good">100.0%</td>
+      <td class="num crap-ok">0.00</td>
+      <td></td>
+    </tr><tr data-crap="0" data-cov="0" data-cyc="1">
+      <td class="mono">Sources/slopguard-cli/Commands/VersionCommand.swift:11</td>
+      <td>VersionCommand.run()</td>
+      <td>function</td>
+      <td class="num">1</td>
+      <td class="num">0</td>
+      <td class="num">0.00</td>
+      <td class="num cov-bad">0.0%</td>
+      <td class="num crap-ok">0.00</td>
+      <td></td>
+    </tr><tr data-crap="0" data-cov="0" data-cyc="1">
+      <td class="mono">Sources/slopguard-cli/Slopguard.swift:31</td>
+      <td>Slopguard.init()</td>
+      <td>initializer</td>
+      <td class="num">1</td>
+      <td class="num">0</td>
+      <td class="num">0.00</td>
+      <td class="num cov-bad">0.0%</td>
+      <td class="num crap-ok">0.00</td>
+      <td></td>
+    </tr><tr data-crap="0" data-cov="0" data-cyc="1">
+      <td class="mono">Sources/slopguard-core/Aggregation/CoverageProvider.swift:8</td>
+      <td>CoverageProvider.methodCoverage(absolutePath:line:endLine:)</td>
+      <td>function</td>
+      <td class="num">1</td>
+      <td class="num">0</td>
+      <td class="num">0.00</td>
+      <td class="num cov-bad">0.0%</td>
+      <td class="num crap-ok">0.00</td>
+      <td></td>
+    </tr><tr data-crap="0" data-cov="0" data-cyc="1">
+      <td class="mono">Sources/slopguard-core/Aggregation/CoverageProvider.swift:11</td>
+      <td>CoverageProvider.fileCoverage(absolutePath:)</td>
+      <td>function</td>
+      <td class="num">1</td>
+      <td class="num">0</td>
+      <td class="num">0.00</td>
+      <td class="num cov-bad">0.0%</td>
+      <td class="num crap-ok">0.00</td>
+      <td></td>
+    </tr><tr data-crap="0" data-cov="100" data-cyc="1">
+      <td class="mono">Sources/slopguard-core/Aggregation/CrapAggregator.swift:7</td>
+      <td>CrapAggregator.init()</td>
+      <td>initializer</td>
+      <td class="num">1</td>
+      <td class="num">0</td>
+      <td class="num">0.00</td>
+      <td class="num cov-good">100.0%</td>
+      <td class="num crap-ok">0.00</td>
+      <td></td>
+    </tr><tr data-crap="0" data-cov="100" data-cyc="1">
+      <td class="mono">Sources/slopguard-core/Analysis/ComplexityVisitor.swift:75</td>
+      <td>ComplexityVisitor.init(filePath:converter:)</td>
+      <td>initializer</td>
+      <td class="num">1</td>
+      <td class="num">0</td>
+      <td class="num">0.00</td>
+      <td class="num cov-good">100.0%</td>
+      <td class="num crap-ok">0.00</td>
+      <td></td>
+    </tr><tr data-crap="0" data-cov="100" data-cyc="1">
+      <td class="mono">Sources/slopguard-core/Analysis/ComplexityVisitor.swift:83</td>
+      <td>ComplexityVisitor.visit(_:)</td>
+      <td>function</td>
+      <td class="num">1</td>
+      <td class="num">0</td>
+      <td class="num">0.00</td>
+      <td class="num cov-good">100.0%</td>
+      <td class="num crap-ok">0.00</td>
+      <td></td>
+    </tr><tr data-crap="0" data-cov="100" data-cyc="1">
+      <td class="mono">Sources/slopguard-core/Analysis/ComplexityVisitor.swift:87</td>
+      <td>ComplexityVisitor.visitPost(_:)</td>
+      <td>function</td>
+      <td class="num">1</td>
+      <td class="num">0</td>
+      <td class="num">0.00</td>
+      <td class="num cov-good">100.0%</td>
+      <td class="num crap-ok">0.00</td>
+      <td></td>
+    </tr><tr data-crap="0" data-cov="100" data-cyc="1">
+      <td class="mono">Sources/slopguard-core/Analysis/ComplexityVisitor.swift:89</td>
+      <td>ComplexityVisitor.visit(_:)</td>
+      <td>function</td>
+      <td class="num">1</td>
+      <td class="num">0</td>
+      <td class="num">0.00</td>
+      <td class="num cov-good">100.0%</td>
+      <td class="num crap-ok">0.00</td>
+      <td></td>
+    </tr><tr data-crap="0" data-cov="100" data-cyc="1">
+      <td class="mono">Sources/slopguard-core/Analysis/ComplexityVisitor.swift:93</td>
+      <td>ComplexityVisitor.visitPost(_:)</td>
+      <td>function</td>
+      <td class="num">1</td>
+      <td class="num">0</td>
+      <td class="num">0.00</td>
+      <td class="num cov-good">100.0%</td>
+      <td class="num crap-ok">0.00</td>
+      <td></td>
+    </tr><tr data-crap="0" data-cov="0" data-cyc="1">
+      <td class="mono">Sources/slopguard-core/Analysis/ComplexityVisitor.swift:95</td>
+      <td>ComplexityVisitor.visit(_:)</td>
+      <td>function</td>
+      <td class="num">1</td>
+      <td class="num">0</td>
+      <td class="num">0.00</td>
+      <td class="num cov-bad">0.0%</td>
+      <td class="num crap-ok">0.00</td>
+      <td></td>
+    </tr><tr data-crap="0" data-cov="0" data-cyc="1">
+      <td class="mono">Sources/slopguard-core/Analysis/ComplexityVisitor.swift:99</td>
+      <td>ComplexityVisitor.visitPost(_:)</td>
+      <td>function</td>
+      <td class="num">1</td>
+      <td class="num">0</td>
+      <td class="num">0.00</td>
+      <td class="num cov-bad">0.0%</td>
+      <td class="num crap-ok">0.00</td>
+      <td></td>
+    </tr><tr data-crap="0" data-cov="0" data-cyc="1">
+      <td class="mono">Sources/slopguard-core/Analysis/ComplexityVisitor.swift:101</td>
+      <td>ComplexityVisitor.visit(_:)</td>
+      <td>function</td>
+      <td class="num">1</td>
+      <td class="num">0</td>
+      <td class="num">0.00</td>
+      <td class="num cov-bad">0.0%</td>
+      <td class="num crap-ok">0.00</td>
+      <td></td>
+    </tr><tr data-crap="0" data-cov="0" data-cyc="1">
+      <td class="mono">Sources/slopguard-core/Analysis/ComplexityVisitor.swift:105</td>
+      <td>ComplexityVisitor.visitPost(_:)</td>
+      <td>function</td>
+      <td class="num">1</td>
+      <td class="num">0</td>
+      <td class="num">0.00</td>
+      <td class="num cov-bad">0.0%</td>
+      <td class="num crap-ok">0.00</td>
+      <td></td>
+    </tr><tr data-crap="0" data-cov="0" data-cyc="1">
+      <td class="mono">Sources/slopguard-core/Analysis/ComplexityVisitor.swift:107</td>
+      <td>ComplexityVisitor.visit(_:)</td>
+      <td>function</td>
+      <td class="num">1</td>
+      <td class="num">0</td>
+      <td class="num">0.00</td>
+      <td class="num cov-bad">0.0%</td>
+      <td class="num crap-ok">0.00</td>
+      <td></td>
+    </tr><tr data-crap="0" data-cov="0" data-cyc="1">
+      <td class="mono">Sources/slopguard-core/Analysis/ComplexityVisitor.swift:111</td>
+      <td>ComplexityVisitor.visitPost(_:)</td>
+      <td>function</td>
+      <td class="num">1</td>
+      <td class="num">0</td>
+      <td class="num">0.00</td>
+      <td class="num cov-bad">0.0%</td>
+      <td class="num crap-ok">0.00</td>
+      <td></td>
+    </tr><tr data-crap="0" data-cov="100" data-cyc="1">
+      <td class="mono">Sources/slopguard-core/Analysis/ComplexityVisitor.swift:113</td>
+      <td>ComplexityVisitor.visit(_:)</td>
+      <td>function</td>
+      <td class="num">1</td>
+      <td class="num">0</td>
+      <td class="num">0.00</td>
+      <td class="num cov-good">100.0%</td>
+      <td class="num crap-ok">0.00</td>
+      <td></td>
+    </tr><tr data-crap="0" data-cov="100" data-cyc="1">
+      <td class="mono">Sources/slopguard-core/Analysis/ComplexityVisitor.swift:118</td>
+      <td>ComplexityVisitor.visitPost(_:)</td>
+      <td>function</td>
+      <td class="num">1</td>
+      <td class="num">0</td>
+      <td class="num">0.00</td>
+      <td class="num cov-good">100.0%</td>
+      <td class="num crap-ok">0.00</td>
+      <td></td>
+    </tr><tr data-crap="0" data-cov="100" data-cyc="1">
+      <td class="mono">Sources/slopguard-core/Analysis/ComplexityVisitor.swift:122</td>
+      <td>ComplexityVisitor.visit(_:)</td>
+      <td>function</td>
+      <td class="num">1</td>
+      <td class="num">0</td>
+      <td class="num">0.00</td>
+      <td class="num cov-good">100.0%</td>
+      <td class="num crap-ok">0.00</td>
+      <td></td>
+    </tr><tr data-crap="0" data-cov="100" data-cyc="1">
+      <td class="mono">Sources/slopguard-core/Analysis/ComplexityVisitor.swift:130</td>
+      <td>ComplexityVisitor.visitPost(_:)</td>
+      <td>function</td>
+      <td class="num">1</td>
+      <td class="num">0</td>
+      <td class="num">0.00</td>
+      <td class="num cov-good">100.0%</td>
+      <td class="num crap-ok">0.00</td>
+      <td></td>
+    </tr><tr data-crap="0" data-cov="100" data-cyc="1">
+      <td class="mono">Sources/slopguard-core/Analysis/ComplexityVisitor.swift:132</td>
+      <td>ComplexityVisitor.visit(_:)</td>
+      <td>function</td>
+      <td class="num">1</td>
+      <td class="num">0</td>
+      <td class="num">0.00</td>
+      <td class="num cov-good">100.0%</td>
+      <td class="num crap-ok">0.00</td>
+      <td></td>
+    </tr><tr data-crap="0" data-cov="100" data-cyc="1">
+      <td class="mono">Sources/slopguard-core/Analysis/ComplexityVisitor.swift:140</td>
+      <td>ComplexityVisitor.visitPost(_:)</td>
+      <td>function</td>
+      <td class="num">1</td>
+      <td class="num">0</td>
+      <td class="num">0.00</td>
+      <td class="num cov-good">100.0%</td>
+      <td class="num crap-ok">0.00</td>
+      <td></td>
+    </tr><tr data-crap="0" data-cov="100" data-cyc="1">
+      <td class="mono">Sources/slopguard-core/Analysis/ComplexityVisitor.swift:142</td>
+      <td>ComplexityVisitor.visit(_:)</td>
+      <td>function</td>
+      <td class="num">1</td>
+      <td class="num">0</td>
+      <td class="num">0.00</td>
+      <td class="num cov-good">100.0%</td>
+      <td class="num crap-ok">0.00</td>
+      <td></td>
+    </tr><tr data-crap="0" data-cov="100" data-cyc="1">
+      <td class="mono">Sources/slopguard-core/Analysis/ComplexityVisitor.swift:146</td>
+      <td>ComplexityVisitor.visitPost(_:)</td>
+      <td>function</td>
+      <td class="num">1</td>
+      <td class="num">0</td>
+      <td class="num">0.00</td>
+      <td class="num cov-good">100.0%</td>
+      <td class="num crap-ok">0.00</td>
+      <td></td>
+    </tr><tr data-crap="0" data-cov="0" data-cyc="1">
+      <td class="mono">Sources/slopguard-core/Analysis/ComplexityVisitor.swift:148</td>
+      <td>ComplexityVisitor.visit(_:)</td>
+      <td>function</td>
+      <td class="num">1</td>
+      <td class="num">0</td>
+      <td class="num">0.00</td>
+      <td class="num cov-bad">0.0%</td>
+      <td class="num crap-ok">0.00</td>
+      <td></td>
+    </tr><tr data-crap="0" data-cov="0" data-cyc="1">
+      <td class="mono">Sources/slopguard-core/Analysis/ComplexityVisitor.swift:156</td>
+      <td>ComplexityVisitor.visitPost(_:)</td>
+      <td>function</td>
+      <td class="num">1</td>
+      <td class="num">0</td>
+      <td class="num">0.00</td>
+      <td class="num cov-bad">0.0%</td>
+      <td class="num crap-ok">0.00</td>
+      <td></td>
+    </tr><tr data-crap="0" data-cov="100" data-cyc="3">
+      <td class="mono">Sources/slopguard-core/Analysis/ComplexityVisitor.swift:168</td>
+      <td>ComplexityVisitor.visit(_:)</td>
+      <td>function</td>
+      <td class="num">3</td>
+      <td class="num">0</td>
+      <td class="num">0.00</td>
+      <td class="num cov-good">100.0%</td>
+      <td class="num crap-ok">0.00</td>
+      <td></td>
+    </tr><tr data-crap="0" data-cov="100" data-cyc="1">
+      <td class="mono">Sources/slopguard-core/Analysis/ComplexityVisitor.swift:179</td>
+      <td>ComplexityVisitor.visitPost(_:)</td>
+      <td>function</td>
+      <td class="num">1</td>
+      <td class="num">0</td>
+      <td class="num">0.00</td>
+      <td class="num cov-good">100.0%</td>
+      <td class="num crap-ok">0.00</td>
+      <td></td>
+    </tr><tr data-crap="0" data-cov="100" data-cyc="1">
+      <td class="mono">Sources/slopguard-core/Analysis/ComplexityVisitor.swift:235</td>
+      <td>ComplexityVisitor.visitPost(_:)</td>
+      <td>function</td>
+      <td class="num">1</td>
+      <td class="num">0</td>
+      <td class="num">0.00</td>
+      <td class="num cov-good">100.0%</td>
+      <td class="num crap-ok">0.00</td>
+      <td></td>
+    </tr><tr data-crap="0" data-cov="100" data-cyc="1">
+      <td class="mono">Sources/slopguard-core/Analysis/ComplexityVisitor.swift:244</td>
+      <td>ComplexityVisitor.visit(_:)</td>
+      <td>function</td>
+      <td class="num">1</td>
+      <td class="num">0</td>
+      <td class="num">0.00</td>
+      <td class="num cov-good">100.0%</td>
+      <td class="num crap-ok">0.00</td>
+      <td></td>
+    </tr><tr data-crap="0" data-cov="100" data-cyc="1">
+      <td class="mono">Sources/slopguard-core/Analysis/ComplexityVisitor.swift:250</td>
+      <td>ComplexityVisitor.visit(_:)</td>
+      <td>function</td>
+      <td class="num">1</td>
+      <td class="num">0</td>
+      <td class="num">0.00</td>
+      <td class="num cov-good">100.0%</td>
+      <td class="num crap-ok">0.00</td>
+      <td></td>
+    </tr><tr data-crap="0" data-cov="100" data-cyc="1">
+      <td class="mono">Sources/slopguard-core/Analysis/ComplexityVisitor.swift:256</td>
+      <td>ComplexityVisitor.visitPost(_:)</td>
+      <td>function</td>
+      <td class="num">1</td>
+      <td class="num">0</td>
+      <td class="num">0.00</td>
+      <td class="num cov-good">100.0%</td>
+      <td class="num crap-ok">0.00</td>
+      <td></td>
+    </tr><tr data-crap="0" data-cov="100" data-cyc="1">
+      <td class="mono">Sources/slopguard-core/Analysis/ComplexityVisitor.swift:258</td>
+      <td>ComplexityVisitor.visit(_:)</td>
+      <td>function</td>
+      <td class="num">1</td>
+      <td class="num">0</td>
+      <td class="num">0.00</td>
+      <td class="num cov-good">100.0%</td>
+      <td class="num crap-ok">0.00</td>
+      <td></td>
+    </tr><tr data-crap="0" data-cov="100" data-cyc="1">
+      <td class="mono">Sources/slopguard-core/Analysis/ComplexityVisitor.swift:264</td>
+      <td>ComplexityVisitor.visitPost(_:)</td>
+      <td>function</td>
+      <td class="num">1</td>
+      <td class="num">0</td>
+      <td class="num">0.00</td>
+      <td class="num cov-good">100.0%</td>
+      <td class="num crap-ok">0.00</td>
+      <td></td>
+    </tr><tr data-crap="0" data-cov="100" data-cyc="1">
+      <td class="mono">Sources/slopguard-core/Analysis/ComplexityVisitor.swift:266</td>
+      <td>ComplexityVisitor.visit(_:)</td>
+      <td>function</td>
+      <td class="num">1</td>
+      <td class="num">0</td>
+      <td class="num">0.00</td>
+      <td class="num cov-good">100.0%</td>
+      <td class="num crap-ok">0.00</td>
+      <td></td>
+    </tr><tr data-crap="0" data-cov="100" data-cyc="1">
+      <td class="mono">Sources/slopguard-core/Analysis/ComplexityVisitor.swift:272</td>
+      <td>ComplexityVisitor.visitPost(_:)</td>
+      <td>function</td>
+      <td class="num">1</td>
+      <td class="num">0</td>
+      <td class="num">0.00</td>
+      <td class="num cov-good">100.0%</td>
+      <td class="num crap-ok">0.00</td>
+      <td></td>
+    </tr><tr data-crap="0" data-cov="100" data-cyc="1">
+      <td class="mono">Sources/slopguard-core/Analysis/ComplexityVisitor.swift:274</td>
+      <td>ComplexityVisitor.visit(_:)</td>
+      <td>function</td>
+      <td class="num">1</td>
+      <td class="num">0</td>
+      <td class="num">0.00</td>
+      <td class="num cov-good">100.0%</td>
+      <td class="num crap-ok">0.00</td>
+      <td></td>
+    </tr><tr data-crap="0" data-cov="100" data-cyc="1">
+      <td class="mono">Sources/slopguard-core/Analysis/ComplexityVisitor.swift:280</td>
+      <td>ComplexityVisitor.visitPost(_:)</td>
+      <td>function</td>
+      <td class="num">1</td>
+      <td class="num">0</td>
+      <td class="num">0.00</td>
+      <td class="num cov-good">100.0%</td>
+      <td class="num crap-ok">0.00</td>
+      <td></td>
+    </tr><tr data-crap="0" data-cov="100" data-cyc="1">
+      <td class="mono">Sources/slopguard-core/Analysis/ComplexityVisitor.swift:286</td>
+      <td>ComplexityVisitor.visit(_:)</td>
+      <td>function</td>
+      <td class="num">1</td>
+      <td class="num">0</td>
+      <td class="num">0.00</td>
+      <td class="num cov-good">100.0%</td>
+      <td class="num crap-ok">0.00</td>
+      <td></td>
+    </tr><tr data-crap="0" data-cov="100" data-cyc="1">
+      <td class="mono">Sources/slopguard-core/Analysis/ComplexityVisitor.swift:291</td>
+      <td>ComplexityVisitor.visitPost(_:)</td>
+      <td>function</td>
+      <td class="num">1</td>
+      <td class="num">0</td>
+      <td class="num">0.00</td>
+      <td class="num cov-good">100.0%</td>
+      <td class="num crap-ok">0.00</td>
+      <td></td>
+    </tr><tr data-crap="0" data-cov="0" data-cyc="1">
+      <td class="mono">Sources/slopguard-core/Analysis/ComplexityVisitor.swift:302</td>
+      <td>ComplexityVisitor.visit(_:)</td>
+      <td>function</td>
+      <td class="num">1</td>
+      <td class="num">0</td>
+      <td class="num">0.00</td>
+      <td class="num cov-bad">0.0%</td>
+      <td class="num crap-ok">0.00</td>
+      <td></td>
+    </tr><tr data-crap="0" data-cov="0" data-cyc="1">
+      <td class="mono">Sources/slopguard-core/Analysis/ComplexityVisitor.swift:308</td>
+      <td>ComplexityVisitor.visitPost(_:)</td>
+      <td>function</td>
+      <td class="num">1</td>
+      <td class="num">0</td>
+      <td class="num">0.00</td>
+      <td class="num cov-bad">0.0%</td>
+      <td class="num crap-ok">0.00</td>
+      <td></td>
+    </tr><tr data-crap="0" data-cov="100" data-cyc="1">
+      <td class="mono">Sources/slopguard-core/Analysis/ComplexityVisitor.swift:310</td>
+      <td>ComplexityVisitor.visit(_:)</td>
+      <td>function</td>
+      <td class="num">1</td>
+      <td class="num">0</td>
+      <td class="num">0.00</td>
+      <td class="num cov-good">100.0%</td>
+      <td class="num crap-ok">0.00</td>
+      <td></td>
+    </tr><tr data-crap="0" data-cov="100" data-cyc="1">
+      <td class="mono">Sources/slopguard-core/Analysis/ComplexityVisitor.swift:316</td>
+      <td>ComplexityVisitor.visitPost(_:)</td>
+      <td>function</td>
+      <td class="num">1</td>
+      <td class="num">0</td>
+      <td class="num">0.00</td>
+      <td class="num cov-good">100.0%</td>
+      <td class="num crap-ok">0.00</td>
+      <td></td>
+    </tr><tr data-crap="0" data-cov="100" data-cyc="1">
+      <td class="mono">Sources/slopguard-core/Analysis/ComplexityVisitor.swift:360</td>
+      <td>ComplexityVisitor.visit(_:)</td>
+      <td>function</td>
+      <td class="num">1</td>
+      <td class="num">0</td>
+      <td class="num">0.00</td>
+      <td class="num cov-good">100.0%</td>
+      <td class="num crap-ok">0.00</td>
+      <td></td>
+    </tr><tr data-crap="0" data-cov="100" data-cyc="1">
+      <td class="mono">Sources/slopguard-core/Analysis/ComplexityVisitor.swift:364</td>
+      <td>ComplexityVisitor.visitPost(_:)</td>
+      <td>function</td>
+      <td class="num">1</td>
+      <td class="num">0</td>
+      <td class="num">0.00</td>
+      <td class="num cov-good">100.0%</td>
+      <td class="num crap-ok">0.00</td>
+      <td></td>
+    </tr><tr data-crap="0" data-cov="100" data-cyc="1">
+      <td class="mono">Sources/slopguard-core/Analysis/ComplexityVisitor.swift:368</td>
+      <td>ComplexityVisitor.pushType(_:name:range:)</td>
+      <td>function</td>
+      <td class="num">1</td>
+      <td class="num">0</td>
+      <td class="num">0.00</td>
+      <td class="num cov-good">100.0%</td>
+      <td class="num crap-ok">0.00</td>
+      <td></td>
+    </tr><tr data-crap="0" data-cov="100" data-cyc="4">
+      <td class="mono">Sources/slopguard-core/Analysis/ComplexityVisitor.swift:374</td>
+      <td>ComplexityVisitor.popType()</td>
+      <td>function</td>
+      <td class="num">4</td>
+      <td class="num">0</td>
+      <td class="num">0.00</td>
+      <td class="num cov-good">100.0%</td>
+      <td class="num crap-ok">0.00</td>
+      <td></td>
+    </tr><tr data-crap="0" data-cov="100" data-cyc="2">
+      <td class="mono">Sources/slopguard-core/Analysis/ComplexityVisitor.swift:445</td>
+      <td>ComplexityVisitor.bumpCyclomatic()</td>
+      <td>function</td>
+      <td class="num">2</td>
+      <td class="num">0</td>
+      <td class="num">0.00</td>
+      <td class="num cov-good">100.0%</td>
+      <td class="num crap-ok">0.00</td>
+      <td></td>
+    </tr><tr data-crap="0" data-cov="100" data-cyc="2">
+      <td class="mono">Sources/slopguard-core/Analysis/ComplexityVisitor.swift:450</td>
+      <td>ComplexityVisitor.bumpCognitive(by:)</td>
+      <td>function</td>
+      <td class="num">2</td>
+      <td class="num">0</td>
+      <td class="num">0.00</td>
+      <td class="num cov-good">100.0%</td>
+      <td class="num crap-ok">0.00</td>
+      <td></td>
+    </tr><tr data-crap="0" data-cov="100" data-cyc="2">
+      <td class="mono">Sources/slopguard-core/Analysis/ComplexityVisitor.swift:455</td>
+      <td>ComplexityVisitor.currentNesting()</td>
+      <td>function</td>
+      <td class="num">2</td>
+      <td class="num">0</td>
+      <td class="num">0.00</td>
+      <td class="num cov-good">100.0%</td>
+      <td class="num crap-ok">0.00</td>
+      <td></td>
+    </tr><tr data-crap="0" data-cov="100" data-cyc="2">
+      <td class="mono">Sources/slopguard-core/Analysis/ComplexityVisitor.swift:459</td>
+      <td>ComplexityVisitor.pushNesting()</td>
+      <td>function</td>
+      <td class="num">2</td>
+      <td class="num">0</td>
+      <td class="num">0.00</td>
+      <td class="num cov-good">100.0%</td>
+      <td class="num crap-ok">0.00</td>
+      <td></td>
+    </tr><tr data-crap="0" data-cov="100" data-cyc="2">
+      <td class="mono">Sources/slopguard-core/Analysis/ComplexityVisitor.swift:464</td>
+      <td>ComplexityVisitor.popNesting()</td>
+      <td>function</td>
+      <td class="num">2</td>
+      <td class="num">0</td>
+      <td class="num">0.00</td>
+      <td class="num cov-good">100.0%</td>
+      <td class="num crap-ok">0.00</td>
+      <td></td>
+    </tr><tr data-crap="0" data-cov="100" data-cyc="1">
+      <td class="mono">Sources/slopguard-core/Analysis/ComplexityVisitor.swift:478</td>
+      <td>ComplexityVisitor.functionName(_:)</td>
+      <td>function</td>
+      <td class="num">1</td>
+      <td class="num">0</td>
+      <td class="num">0.00</td>
+      <td class="num cov-good">100.0%</td>
+      <td class="num crap-ok">0.00</td>
+      <td></td>
+    </tr><tr data-crap="0" data-cov="100" data-cyc="1">
+      <td class="mono">Sources/slopguard-core/Analysis/ComplexityVisitor.swift:482</td>
+      <td>ComplexityVisitor.initName(_:)</td>
+      <td>function</td>
+      <td class="num">1</td>
+      <td class="num">0</td>
+      <td class="num">0.00</td>
+      <td class="num cov-good">100.0%</td>
+      <td class="num crap-ok">0.00</td>
+      <td></td>
+    </tr><tr data-crap="0" data-cov="0" data-cyc="1">
+      <td class="mono">Sources/slopguard-core/Analysis/ComplexityVisitor.swift:486</td>
+      <td>ComplexityVisitor.subscriptName(_:)</td>
+      <td>function</td>
+      <td class="num">1</td>
+      <td class="num">0</td>
+      <td class="num">0.00</td>
+      <td class="num cov-bad">0.0%</td>
+      <td class="num crap-ok">0.00</td>
+      <td></td>
+    </tr><tr data-crap="0" data-cov="100" data-cyc="1">
+      <td class="mono">Sources/slopguard-core/Analysis/DirectoryAnalyzer.swift:12</td>
+      <td>AnalysisOptions.init(includeGlobs:excludeGlobs:followSymlinks:)</td>
+      <td>initializer</td>
+      <td class="num">1</td>
+      <td class="num">0</td>
+      <td class="num">0.00</td>
+      <td class="num cov-good">100.0%</td>
+      <td class="num crap-ok">0.00</td>
+      <td></td>
+    </tr><tr data-crap="0" data-cov="100" data-cyc="1">
+      <td class="mono">Sources/slopguard-core/Analysis/DirectoryAnalyzer.swift:64</td>
+      <td>DirectoryAnalyzer.init(analyzer:)</td>
+      <td>initializer</td>
+      <td class="num">1</td>
+      <td class="num">0</td>
+      <td class="num">0.00</td>
+      <td class="num cov-good">100.0%</td>
+      <td class="num crap-ok">0.00</td>
+      <td></td>
+    </tr><tr data-crap="0" data-cov="100" data-cyc="1">
+      <td class="mono">Sources/slopguard-core/Analysis/DirectoryAnalyzer.swift:70</td>
+      <td>DirectoryAnalyzer.analyze(rootURL:options:)</td>
+      <td>function</td>
+      <td class="num">1</td>
+      <td class="num">0</td>
+      <td class="num">0.00</td>
+      <td class="num cov-good">100.0%</td>
+      <td class="num crap-ok">0.00</td>
+      <td></td>
+    </tr><tr data-crap="0" data-cov="100" data-cyc="1">
+      <td class="mono">Sources/slopguard-core/Analysis/DirectoryAnalyzer.swift:144</td>
+      <td>DirectoryAnalyzer.isDirectory(_:)</td>
+      <td>function</td>
+      <td class="num">1</td>
+      <td class="num">0</td>
+      <td class="num">0.00</td>
+      <td class="num cov-good">100.0%</td>
+      <td class="num crap-ok">0.00</td>
+      <td></td>
+    </tr><tr data-crap="0" data-cov="100" data-cyc="1">
+      <td class="mono">Sources/slopguard-core/Analysis/DirectoryAnalyzer.swift:161</td>
+      <td>fnmatchOne(pattern:path:)</td>
+      <td>function</td>
+      <td class="num">1</td>
+      <td class="num">0</td>
+      <td class="num">0.00</td>
+      <td class="num cov-good">100.0%</td>
+      <td class="num crap-ok">0.00</td>
+      <td></td>
+    </tr><tr data-crap="0" data-cov="100" data-cyc="1">
+      <td class="mono">Sources/slopguard-core/Analysis/SwiftFileAnalyzer.swift:9</td>
+      <td>SwiftFileAnalyzer.init()</td>
+      <td>initializer</td>
+      <td class="num">1</td>
+      <td class="num">0</td>
+      <td class="num">0.00</td>
+      <td class="num cov-good">100.0%</td>
+      <td class="num crap-ok">0.00</td>
+      <td></td>
+    </tr><tr data-crap="0" data-cov="100" data-cyc="1">
+      <td class="mono">Sources/slopguard-core/Analysis/SwiftFileAnalyzer.swift:31</td>
+      <td>SwiftFileAnalyzer.analyze(source:reportedPath:)</td>
+      <td>function</td>
+      <td class="num">1</td>
+      <td class="num">0</td>
+      <td class="num">0.00</td>
+      <td class="num cov-good">100.0%</td>
+      <td class="num crap-ok">0.00</td>
+      <td></td>
+    </tr><tr data-crap="0" data-cov="100" data-cyc="1">
+      <td class="mono">Sources/slopguard-core/CRAP.swift:36</td>
+      <td>CRAP.score(complexity:coveragePercent:)</td>
+      <td>function</td>
+      <td class="num">1</td>
+      <td class="num">0</td>
+      <td class="num">0.00</td>
+      <td class="num cov-good">100.0%</td>
+      <td class="num crap-ok">0.00</td>
+      <td></td>
+    </tr><tr data-crap="0" data-cov="100" data-cyc="1">
+      <td class="mono">Sources/slopguard-core/CRAP.swift:54</td>
+      <td>CRAP.Aggregate.init(sum:max:methodCount:)</td>
+      <td>initializer</td>
+      <td class="num">1</td>
+      <td class="num">0</td>
+      <td class="num">0.00</td>
+      <td class="num cov-good">100.0%</td>
+      <td class="num crap-ok">0.00</td>
+      <td></td>
+    </tr><tr data-crap="0" data-cov="100" data-cyc="1">
+      <td class="mono">Sources/slopguard-core/Errors/SlopguardError.swift:45</td>
+      <td>SlopguardError.code.get</td>
+      <td>getter</td>
+      <td class="num">1</td>
+      <td class="num">0</td>
+      <td class="num">0.00</td>
+      <td class="num cov-good">100.0%</td>
+      <td class="num crap-ok">0.00</td>
+      <td></td>
+    </tr><tr data-crap="0" data-cov="100" data-cyc="1">
+      <td class="mono">Sources/slopguard-core/Errors/SlopguardError.swift:46</td>
+      <td>SlopguardError.message.get</td>
+      <td>getter</td>
+      <td class="num">1</td>
+      <td class="num">0</td>
+      <td class="num">0.00</td>
+      <td class="num cov-good">100.0%</td>
+      <td class="num crap-ok">0.00</td>
+      <td></td>
+    </tr><tr data-crap="0" data-cov="100" data-cyc="1">
+      <td class="mono">Sources/slopguard-core/Errors/SlopguardError.swift:47</td>
+      <td>SlopguardError.description.get</td>
+      <td>getter</td>
+      <td class="num">1</td>
+      <td class="num">0</td>
+      <td class="num">0.00</td>
+      <td class="num cov-good">100.0%</td>
+      <td class="num crap-ok">0.00</td>
+      <td></td>
+    </tr><tr data-crap="0" data-cov="100" data-cyc="1">
+      <td class="mono">Sources/slopguard-core/Errors/SlopguardError.swift:109</td>
+      <td>SlopguardErrorEnvelope.init(_:)</td>
+      <td>initializer</td>
+      <td class="num">1</td>
+      <td class="num">0</td>
+      <td class="num">0.00</td>
+      <td class="num cov-good">100.0%</td>
+      <td class="num crap-ok">0.00</td>
+      <td></td>
+    </tr><tr data-crap="0" data-cov="100" data-cyc="1">
+      <td class="mono">Sources/slopguard-core/Errors/SlopguardError.swift:114</td>
+      <td>SlopguardErrorEnvelope.init(code:message:)</td>
+      <td>initializer</td>
+      <td class="num">1</td>
+      <td class="num">0</td>
+      <td class="num">0.00</td>
+      <td class="num cov-good">100.0%</td>
+      <td class="num crap-ok">0.00</td>
+      <td></td>
+    </tr><tr data-crap="0" data-cov="100" data-cyc="1">
+      <td class="mono">Sources/slopguard-core/Formatting/CrapReportFormatter.swift:38</td>
+      <td>CrapReportFormatter.errorText(_:)</td>
+      <td>function</td>
+      <td class="num">1</td>
+      <td class="num">0</td>
+      <td class="num">0.00</td>
+      <td class="num cov-good">100.0%</td>
+      <td class="num crap-ok">0.00</td>
+      <td></td>
+    </tr><tr data-crap="0" data-cov="100" data-cyc="1">
+      <td class="mono">Sources/slopguard-core/Formatting/CrapReportFormatter.swift:42</td>
+      <td>CrapReportFormatter.errorJSON(_:)</td>
+      <td>function</td>
+      <td class="num">1</td>
+      <td class="num">0</td>
+      <td class="num">0.00</td>
+      <td class="num cov-good">100.0%</td>
+      <td class="num crap-ok">0.00</td>
+      <td></td>
+    </tr><tr data-crap="0" data-cov="100" data-cyc="1">
+      <td class="mono">Sources/slopguard-core/Formatting/CrapReportFormatter.swift:123</td>
+      <td>CrapReportFormatter.formatNumber(_:)</td>
+      <td>function</td>
+      <td class="num">1</td>
+      <td class="num">0</td>
+      <td class="num">0.00</td>
+      <td class="num cov-good">100.0%</td>
+      <td class="num crap-ok">0.00</td>
+      <td></td>
+    </tr><tr data-crap="0" data-cov="100" data-cyc="1">
+      <td class="mono">Sources/slopguard-core/Models/CrapReport.swift:31</td>
+      <td>CrapReport.init(tool:toolVersion:generatedAt:sourceRoot:xcresultPath:threshold:coverageAvailable:notes:summary:methods:types:)</td>
+      <td>initializer</td>
+      <td class="num">1</td>
+      <td class="num">0</td>
+      <td class="num">0.00</td>
+      <td class="num cov-good">100.0%</td>
+      <td class="num crap-ok">0.00</td>
+      <td></td>
+    </tr><tr data-crap="0" data-cov="100" data-cyc="1">
+      <td class="mono">Sources/slopguard-core/Models/CrapReport.swift:71</td>
+      <td>CrapReport.Summary.init(fileCount:typeCount:methodCount:crappyMethodCount:crappyTypeCount:averageCrap:maxCrap:averageComplexity:averageCognitiveComplexity:averageWeightedComplexity:weightedCoverage:)</td>
+      <td>initializer</td>
+      <td class="num">1</td>
+      <td class="num">0</td>
+      <td class="num">0.00</td>
+      <td class="num cov-good">100.0%</td>
+      <td class="num crap-ok">0.00</td>
+      <td></td>
+    </tr><tr data-crap="0" data-cov="100" data-cyc="1">
+      <td class="mono">Sources/slopguard-core/Models/CrapReport.swift:121</td>
+      <td>MethodCrap.init(id:file:line:endLine:typeName:name:qualifiedName:kind:complexity:cognitiveComplexity:weightedComplexity:coverage:crap:isCrappy:)</td>
+      <td>initializer</td>
+      <td class="num">1</td>
+      <td class="num">0</td>
+      <td class="num">0.00</td>
+      <td class="num cov-good">100.0%</td>
+      <td class="num crap-ok">0.00</td>
+      <td></td>
+    </tr><tr data-crap="0" data-cov="100" data-cyc="1">
+      <td class="mono">Sources/slopguard-core/Models/CrapReport.swift:177</td>
+      <td>TypeCrap.init(id:file:line:kind:name:methodCount:totalComplexity:maxComplexity:totalCognitiveComplexity:maxCognitiveComplexity:weightedTotalComplexity:weightedCoverage:sumCrap:maxCrap:aggregatedCrap:isCrappy:)</td>
+      <td>initializer</td>
+      <td class="num">1</td>
+      <td class="num">0</td>
+      <td class="num">0.00</td>
+      <td class="num cov-good">100.0%</td>
+      <td class="num crap-ok">0.00</td>
+      <td></td>
+    </tr><tr data-crap="0" data-cov="100" data-cyc="1">
+      <td class="mono">Sources/slopguard-core/Models/FileReport.swift:10</td>
+      <td>FileReport.init(path:methods:types:)</td>
+      <td>initializer</td>
+      <td class="num">1</td>
+      <td class="num">0</td>
+      <td class="num">0.00</td>
+      <td class="num cov-good">100.0%</td>
+      <td class="num crap-ok">0.00</td>
+      <td></td>
+    </tr><tr data-crap="0" data-cov="100" data-cyc="1">
+      <td class="mono">Sources/slopguard-core/Models/MethodMetric.swift:67</td>
+      <td>MethodMetric.init(name:qualifiedName:typeName:kind:file:startLine:endLine:complexity:cognitiveComplexity:)</td>
+      <td>initializer</td>
+      <td class="num">1</td>
+      <td class="num">0</td>
+      <td class="num">0.00</td>
+      <td class="num cov-good">100.0%</td>
+      <td class="num crap-ok">0.00</td>
+      <td></td>
+    </tr><tr data-crap="0" data-cov="100" data-cyc="1">
+      <td class="mono">Sources/slopguard-core/Models/MethodMetric.swift:92</td>
+      <td>MethodMetric.id.get</td>
+      <td>getter</td>
+      <td class="num">1</td>
+      <td class="num">0</td>
+      <td class="num">0.00</td>
+      <td class="num cov-good">100.0%</td>
+      <td class="num crap-ok">0.00</td>
+      <td></td>
+    </tr><tr data-crap="0" data-cov="100" data-cyc="1">
+      <td class="mono">Sources/slopguard-core/Models/TypeMetric.swift:22</td>
+      <td>TypeMetric.init(kind:name:file:startLine:endLine:methodIDs:methodCount:totalComplexity:maxComplexity:totalCognitiveComplexity:maxCognitiveComplexity:)</td>
+      <td>initializer</td>
+      <td class="num">1</td>
+      <td class="num">0</td>
+      <td class="num">0.00</td>
+      <td class="num cov-good">100.0%</td>
+      <td class="num crap-ok">0.00</td>
+      <td></td>
+    </tr><tr data-crap="0" data-cov="100" data-cyc="1">
+      <td class="mono">Sources/slopguard-core/Models/TypeMetric.swift:48</td>
+      <td>TypeMetric.id.get</td>
+      <td>getter</td>
+      <td class="num">1</td>
+      <td class="num">0</td>
+      <td class="num">0.00</td>
+      <td class="num cov-good">100.0%</td>
+      <td class="num crap-ok">0.00</td>
+      <td></td>
+    </tr><tr data-crap="0" data-cov="100" data-cyc="1">
+      <td class="mono">Sources/slopguard-coverage/AnalysisPipeline.swift:18</td>
+      <td>AnalysisPipeline.init(analyzer:xccov:xcresultProbe:xcodebuild:aggregator:)</td>
+      <td>initializer</td>
+      <td class="num">1</td>
+      <td class="num">0</td>
+      <td class="num">0.00</td>
+      <td class="num cov-good">100.0%</td>
+      <td class="num crap-ok">0.00</td>
+      <td></td>
+    </tr><tr data-crap="0" data-cov="100" data-cyc="1">
+      <td class="mono">Sources/slopguard-coverage/AnalysisPipeline.swift:46</td>
+      <td>AnalysisPipeline.AutoCoverageOptions.init(projectDirectory:scheme:destination:)</td>
+      <td>initializer</td>
+      <td class="num">1</td>
+      <td class="num">0</td>
+      <td class="num">0.00</td>
+      <td class="num cov-good">100.0%</td>
+      <td class="num crap-ok">0.00</td>
+      <td></td>
+    </tr><tr data-crap="0" data-cov="100" data-cyc="1">
+      <td class="mono">Sources/slopguard-coverage/AnalysisPipeline.swift:229</td>
+      <td>AnalysisPipeline.Resolved.init(xcresultURL:isEphemeral:testsPassed:cleanup:)</td>
+      <td>initializer</td>
+      <td class="num">1</td>
+      <td class="num">0</td>
+      <td class="num">0.00</td>
+      <td class="num cov-good">100.0%</td>
+      <td class="num crap-ok">0.00</td>
+      <td></td>
+    </tr><tr data-crap="0" data-cov="100" data-cyc="1">
+      <td class="mono">Sources/slopguard-coverage/CoverageIndex.swift:102</td>
+      <td>CoverageIndex.fileCoverage(forAbsolutePath:)</td>
+      <td>function</td>
+      <td class="num">1</td>
+      <td class="num">0</td>
+      <td class="num">0.00</td>
+      <td class="num cov-good">100.0%</td>
+      <td class="num crap-ok">0.00</td>
+      <td></td>
+    </tr><tr data-crap="0" data-cov="0" data-cyc="1">
+      <td class="mono">Sources/slopguard-coverage/CoverageIndex.swift:131</td>
+      <td>CoverageIndex.methodCoverage(absolutePath:line:endLine:)</td>
+      <td>function</td>
+      <td class="num">1</td>
+      <td class="num">0</td>
+      <td class="num">0.00</td>
+      <td class="num cov-bad">0.0%</td>
+      <td class="num crap-ok">0.00</td>
+      <td></td>
+    </tr><tr data-crap="0" data-cov="0" data-cyc="1">
+      <td class="mono">Sources/slopguard-coverage/CoverageIndex.swift:135</td>
+      <td>CoverageIndex.fileCoverage(absolutePath:)</td>
+      <td>function</td>
+      <td class="num">1</td>
+      <td class="num">0</td>
+      <td class="num">0.00</td>
+      <td class="num cov-bad">0.0%</td>
+      <td class="num crap-ok">0.00</td>
+      <td></td>
+    </tr><tr data-crap="0" data-cov="100" data-cyc="3">
+      <td class="mono">Sources/slopguard-coverage/ProcessRunner.swift:58</td>
+      <td>ProcessRunner.runOrThrow(executable:arguments:cwd:launchError:failureError:)</td>
+      <td>function</td>
+      <td class="num">3</td>
+      <td class="num">0</td>
+      <td class="num">0.00</td>
+      <td class="num cov-good">100.0%</td>
+      <td class="num crap-ok">0.00</td>
+      <td></td>
+    </tr><tr data-crap="0" data-cov="54.054054054054056" data-cyc="1">
+      <td class="mono">Sources/slopguard-coverage/XccovRunner.swift:8</td>
+      <td>XccovReporting.runReport(xcresultURL:)</td>
+      <td>function</td>
+      <td class="num">1</td>
+      <td class="num">0</td>
+      <td class="num">0.00</td>
+      <td class="num cov-ok">54.1%</td>
+      <td class="num crap-ok">0.00</td>
+      <td></td>
+    </tr><tr data-crap="0" data-cov="100" data-cyc="1">
+      <td class="mono">Sources/slopguard-coverage/XccovRunner.swift:15</td>
+      <td>XccovRunner.init()</td>
+      <td>initializer</td>
+      <td class="num">1</td>
+      <td class="num">0</td>
+      <td class="num">0.00</td>
+      <td class="num cov-good">100.0%</td>
+      <td class="num crap-ok">0.00</td>
+      <td></td>
+    </tr><tr data-crap="0" data-cov="60" data-cyc="2">
+      <td class="mono">Sources/slopguard-coverage/XccovRunner.swift:20</td>
+      <td>XccovRunner.runReport(xcresultURL:)</td>
+      <td>function</td>
+      <td class="num">2</td>
+      <td class="num">0</td>
+      <td class="num">0.00</td>
+      <td class="num cov-ok">60.0%</td>
+      <td class="num crap-ok">0.00</td>
+      <td></td>
+    </tr><tr data-crap="0" data-cov="0" data-cyc="1">
+      <td class="mono">Sources/slopguard-coverage/XccovRunner.swift:34</td>
+      <td>XccovRunner.runXccov(xcresultPath:)</td>
+      <td>function</td>
+      <td class="num">1</td>
+      <td class="num">0</td>
+      <td class="num">0.00</td>
+      <td class="num cov-bad">0.0%</td>
+      <td class="num crap-ok">0.00</td>
+      <td></td>
+    </tr><tr data-crap="0" data-cov="100" data-cyc="1">
+      <td class="mono">Sources/slopguard-coverage/XcodebuildRunner.swift:16</td>
+      <td>XcodebuildRunner.init()</td>
+      <td>initializer</td>
+      <td class="num">1</td>
+      <td class="num">0</td>
+      <td class="num">0.00</td>
+      <td class="num cov-good">100.0%</td>
+      <td class="num crap-ok">0.00</td>
+      <td></td>
+    </tr><tr data-crap="0" data-cov="0" data-cyc="1">
+      <td class="mono">Sources/slopguard-coverage/XcodebuildRunner.swift:79</td>
+      <td>XcodebuildRunner.runXcodebuildList(projectDirectory:)</td>
+      <td>function</td>
+      <td class="num">1</td>
+      <td class="num">0</td>
+      <td class="num">0.00</td>
+      <td class="num cov-bad">0.0%</td>
+      <td class="num crap-ok">0.00</td>
+      <td></td>
+    </tr><tr data-crap="0" data-cov="0" data-cyc="1">
+      <td class="mono">Sources/slopguard-coverage/XcodebuildRunner.swift:167</td>
+      <td>XcodebuildRunner.detached(_:)</td>
+      <td>function</td>
+      <td class="num">1</td>
+      <td class="num">0</td>
+      <td class="num">0.00</td>
+      <td class="num cov-bad">0.0%</td>
+      <td class="num crap-ok">0.00</td>
+      <td></td>
+    </tr><tr data-crap="0" data-cov="51.28205128205128" data-cyc="1">
+      <td class="mono">Sources/slopguard-coverage/XcresultProbe.swift:16</td>
+      <td>XcresultTestProbing.testCount(xcresultURL:)</td>
+      <td>function</td>
+      <td class="num">1</td>
+      <td class="num">0</td>
+      <td class="num">0.00</td>
+      <td class="num cov-ok">51.3%</td>
+      <td class="num crap-ok">0.00</td>
+      <td></td>
+    </tr><tr data-crap="0" data-cov="100" data-cyc="1">
+      <td class="mono">Sources/slopguard-coverage/XcresultProbe.swift:21</td>
+      <td>XcresultProbe.init()</td>
+      <td>initializer</td>
+      <td class="num">1</td>
+      <td class="num">0</td>
+      <td class="num">0.00</td>
+      <td class="num cov-good">100.0%</td>
+      <td class="num crap-ok">0.00</td>
+      <td></td>
+    </tr><tr data-crap="0" data-cov="0" data-cyc="2">
+      <td class="mono">Sources/slopguard-coverage/XcresultProbe.swift:23</td>
+      <td>XcresultProbe.testCount(xcresultURL:)</td>
+      <td>function</td>
+      <td class="num">2</td>
+      <td class="num">0</td>
+      <td class="num">0.00</td>
+      <td class="num cov-bad">0.0%</td>
+      <td class="num crap-ok">0.00</td>
+      <td></td>
+    </tr><tr data-crap="0" data-cov="0" data-cyc="2">
+      <td class="mono">Sources/slopguard-coverage/XcresultProbe.swift:42</td>
+      <td>XcresultProbe.runModern(xcresultPath:)</td>
+      <td>function</td>
+      <td class="num">2</td>
+      <td class="num">0</td>
+      <td class="num">0.00</td>
+      <td class="num cov-bad">0.0%</td>
+      <td class="num crap-ok">0.00</td>
+      <td></td>
+    </tr><tr data-crap="0" data-cov="0" data-cyc="2">
+      <td class="mono">Sources/slopguard-coverage/XcresultProbe.swift:52</td>
+      <td>XcresultProbe.runLegacy(xcresultPath:)</td>
+      <td>function</td>
+      <td class="num">2</td>
+      <td class="num">0</td>
+      <td class="num">0.00</td>
+      <td class="num cov-bad">0.0%</td>
+      <td class="num crap-ok">0.00</td>
+      <td></td>
+    </tr><tr data-crap="0" data-cov="100" data-cyc="3">
+      <td class="mono">Sources/slopguard-coverage/XcresultProbe.swift:66</td>
+      <td>XcresultProbe.countTestCases(modernJSON:)</td>
+      <td>function</td>
+      <td class="num">3</td>
+      <td class="num">0</td>
+      <td class="num">0.00</td>
+      <td class="num cov-good">100.0%</td>
+      <td class="num crap-ok">0.00</td>
+      <td></td>
+    </tr><tr data-crap="0" data-cov="100" data-cyc="1">
+      <td class="mono">Sources/slopguard-mcp/ReportCache.swift:12</td>
+      <td>ReportCache.init()</td>
+      <td>initializer</td>
+      <td class="num">1</td>
+      <td class="num">0</td>
+      <td class="num">0.00</td>
+      <td class="num cov-good">100.0%</td>
+      <td class="num crap-ok">0.00</td>
+      <td></td>
+    </tr><tr data-crap="0" data-cov="100" data-cyc="1">
+      <td class="mono">Sources/slopguard-mcp/ReportCache.swift:14</td>
+      <td>ReportCache.store(report:sourceRoot:xcresultPath:)</td>
+      <td>function</td>
+      <td class="num">1</td>
+      <td class="num">0</td>
+      <td class="num">0.00</td>
+      <td class="num cov-good">100.0%</td>
+      <td class="num crap-ok">0.00</td>
+      <td></td>
+    </tr><tr data-crap="0" data-cov="100" data-cyc="1">
+      <td class="mono">Sources/slopguard-mcp/ReportCache.swift:20</td>
+      <td>ReportCache.get()</td>
+      <td>function</td>
+      <td class="num">1</td>
+      <td class="num">0</td>
+      <td class="num">0.00</td>
+      <td class="num cov-good">100.0%</td>
+      <td class="num crap-ok">0.00</td>
+      <td></td>
+    </tr><tr data-crap="0" data-cov="0" data-cyc="1">
+      <td class="mono">Sources/slopguard-mcp/ReportCache.swift:22</td>
+      <td>ReportCache.describe()</td>
+      <td>function</td>
+      <td class="num">1</td>
+      <td class="num">0</td>
+      <td class="num">0.00</td>
+      <td class="num cov-bad">0.0%</td>
+      <td class="num crap-ok">0.00</td>
+      <td></td>
+    </tr><tr data-crap="0" data-cov="0" data-cyc="1">
+      <td class="mono">Sources/slopguard-mcp/SlopguardMCPServer.swift:14</td>
+      <td>SlopguardMCPServer.init(pipeline:cache:)</td>
+      <td>initializer</td>
+      <td class="num">1</td>
+      <td class="num">0</td>
+      <td class="num">0.00</td>
+      <td class="num cov-bad">0.0%</td>
+      <td class="num crap-ok">0.00</td>
+      <td></td>
+    </tr><tr data-crap="0" data-cov="0" data-cyc="1">
+      <td class="mono">Sources/slopguard-mcp/SlopguardMCPServer.swift:43</td>
+      <td>SlopguardMCPServer.run(transport:)</td>
+      <td>function</td>
+      <td class="num">1</td>
+      <td class="num">0</td>
+      <td class="num">0.00</td>
+      <td class="num cov-bad">0.0%</td>
+      <td class="num crap-ok">0.00</td>
+      <td></td>
+    </tr><tr data-crap="0" data-cov="0" data-cyc="1">
+      <td class="mono">Sources/slopguard-mcp/SlopguardMCPServer.swift:49</td>
+      <td>SlopguardMCPServer.stop()</td>
+      <td>function</td>
+      <td class="num">1</td>
+      <td class="num">0</td>
+      <td class="num">0.00</td>
+      <td class="num cov-bad">0.0%</td>
+      <td class="num crap-ok">0.00</td>
+      <td></td>
+    </tr><tr data-crap="0" data-cov="100" data-cyc="1">
+      <td class="mono">Sources/slopguard-mcp/ToolSchemas.swift:9</td>
+      <td>ToolSchemas.analyzeDirectory.get</td>
+      <td>getter</td>
+      <td class="num">1</td>
+      <td class="num">0</td>
+      <td class="num">0.00</td>
+      <td class="num cov-good">100.0%</td>
+      <td class="num crap-ok">0.00</td>
+      <td></td>
+    </tr><tr data-crap="0" data-cov="100" data-cyc="1">
+      <td class="mono">Sources/slopguard-mcp/ToolSchemas.swift:51</td>
+      <td>ToolSchemas.analyzeFile.get</td>
+      <td>getter</td>
+      <td class="num">1</td>
+      <td class="num">0</td>
+      <td class="num">0.00</td>
+      <td class="num cov-good">100.0%</td>
+      <td class="num crap-ok">0.00</td>
+      <td></td>
+    </tr><tr data-crap="0" data-cov="100" data-cyc="1">
+      <td class="mono">Sources/slopguard-mcp/ToolSchemas.swift:77</td>
+      <td>ToolSchemas.getCrapReport.get</td>
+      <td>getter</td>
+      <td class="num">1</td>
+      <td class="num">0</td>
+      <td class="num">0.00</td>
+      <td class="num cov-good">100.0%</td>
+      <td class="num crap-ok">0.00</td>
+      <td></td>
+    </tr><tr data-crap="0" data-cov="100" data-cyc="1">
+      <td class="mono">Sources/slopguard-mcp/ToolSchemas.swift:106</td>
+      <td>ToolSchemas.findCrappyCode.get</td>
+      <td>getter</td>
+      <td class="num">1</td>
+      <td class="num">0</td>
+      <td class="num">0.00</td>
+      <td class="num cov-good">100.0%</td>
+      <td class="num crap-ok">0.00</td>
+      <td></td>
+    </tr><tr data-crap="0" data-cov="100" data-cyc="1">
+      <td class="mono">Sources/slopguard-mcp/ToolSchemas.swift:130</td>
+      <td>ToolSchemas.getCoverageGaps.get</td>
+      <td>getter</td>
+      <td class="num">1</td>
+      <td class="num">0</td>
+      <td class="num">0.00</td>
+      <td class="num cov-good">100.0%</td>
+      <td class="num crap-ok">0.00</td>
+      <td></td>
+    </tr><tr data-crap="0" data-cov="100" data-cyc="1">
+      <td class="mono">Sources/slopguard-mcp/ToolSchemas.swift:152</td>
+      <td>ToolSchemas.suggestRefactor.get</td>
+      <td>getter</td>
+      <td class="num">1</td>
+      <td class="num">0</td>
+      <td class="num">0.00</td>
+      <td class="num cov-good">100.0%</td>
+      <td class="num crap-ok">0.00</td>
+      <td></td>
+    </tr><tr data-crap="0" data-cov="100" data-cyc="1">
+      <td class="mono">Sources/slopguard-mcp/Tools/SuggestRefactorTool.swift:129</td>
+      <td>String.StringInterpolation.appendInterpolation(format:)</td>
+      <td>function</td>
+      <td class="num">1</td>
+      <td class="num">0</td>
+      <td class="num">0.00</td>
+      <td class="num cov-good">100.0%</td>
+      <td class="num crap-ok">0.00</td>
+      <td></td>
+    </tr><tr data-crap="0" data-cov="100" data-cyc="1">
+      <td class="mono">Sources/slopguard-mcp/Tools/ToolDefinition.swift:18</td>
+      <td>ToolDefinition.descriptor.get</td>
+      <td>getter</td>
+      <td class="num">1</td>
+      <td class="num">0</td>
+      <td class="num">0.00</td>
+      <td class="num cov-good">100.0%</td>
+      <td class="num crap-ok">0.00</td>
+      <td></td>
+    </tr><tr data-crap="0" data-cov="100" data-cyc="2">
+      <td class="mono">Sources/slopguard-mcp/Tools/ToolDefinition.swift:41</td>
+      <td>ToolUtilities.successResult(_:)</td>
+      <td>function</td>
+      <td class="num">2</td>
+      <td class="num">0</td>
+      <td class="num">0.00</td>
+      <td class="num cov-good">100.0%</td>
+      <td class="num crap-ok">0.00</td>
+      <td></td>
+    </tr><tr data-crap="0" data-cov="100" data-cyc="1">
+      <td class="mono">Sources/slopguard-mcp/Tools/ToolDefinition.swift:55</td>
+      <td>ToolUtilities.errorResult(_:)</td>
+      <td>function</td>
+      <td class="num">1</td>
+      <td class="num">0</td>
+      <td class="num">0.00</td>
+      <td class="num cov-good">100.0%</td>
+      <td class="num crap-ok">0.00</td>
+      <td></td>
+    </tr><tr data-crap="0" data-cov="100" data-cyc="1">
+      <td class="mono">Sources/slopguard-mcp/Tools/ToolDefinition.swift:81</td>
+      <td>ToolUtilities.string(_:_:)</td>
+      <td>function</td>
+      <td class="num">1</td>
+      <td class="num">0</td>
+      <td class="num">0.00</td>
+      <td class="num cov-good">100.0%</td>
+      <td class="num crap-ok">0.00</td>
+      <td></td>
+    </tr><tr data-crap="0" data-cov="0" data-cyc="1">
+      <td class="mono">Sources/slopguard-mcp/Tools/ToolDefinition.swift:97</td>
+      <td>ToolUtilities.bool(_:_:)</td>
+      <td>function</td>
+      <td class="num">1</td>
+      <td class="num">0</td>
+      <td class="num">0.00</td>
+      <td class="num cov-bad">0.0%</td>
+      <td class="num crap-ok">0.00</td>
+      <td></td>
+    </tr></tbody>
+  </table>
+  <div class="legend">wCRAP = weighted² × (1 − cov/100)³ + weighted, where weighted = √(cyclomatic × cognitive). Threshold: 30.</div>
+</section>
+
+</main>
+<script>
+function bindFilter(inputId, tableId) {
+  const inp = document.getElementById(inputId);
+  const rows = document.querySelectorAll('#' + tableId + ' tbody tr');
+  inp.addEventListener('input', () => {
+    const q = inp.value.toLowerCase();
+    rows.forEach(r => {
+      r.style.display = r.textContent.toLowerCase().includes(q) ? '' : 'none';
+    });
+  });
+}
+bindFilter('typeFilter', 'typeTable');
+bindFilter('methodFilter', 'methodTable');
+const onlyCrappy = document.getElementById('onlyCrappy');
+onlyCrappy.addEventListener('change', () => {
+  document.querySelectorAll('#methodTable tbody tr').forEach(r => {
+    if (onlyCrappy.checked) {
+      r.style.display = r.textContent.includes('⚠️') ? '' : 'none';
+    } else {
+      r.style.display = '';
+    }
+  });
+});
+// click-to-sort
+document.querySelectorAll('table').forEach(tbl => {
+  tbl.querySelectorAll('th').forEach((th, idx) => {
+    let asc = false;
+    th.addEventListener('click', () => {
+      const tbody = tbl.querySelector('tbody');
+      const rows = Array.from(tbody.querySelectorAll('tr'));
+      rows.sort((a, b) => {
+        const av = a.children[idx].textContent.trim();
+        const bv = b.children[idx].textContent.trim();
+        const an = parseFloat(av.replace('%',''));
+        const bn = parseFloat(bv.replace('%',''));
+        if (!isNaN(an) && !isNaN(bn)) return asc ? an - bn : bn - an;
+        return asc ? av.localeCompare(bv) : bv.localeCompare(av);
+      });
+      asc = !asc;
+      rows.forEach(r => tbody.appendChild(r));
+    });
+  });
+});
+</script>
+</body>
+</html>

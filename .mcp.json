@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "slopguard-swift": {
+      "command": "${CLAUDE_PLUGIN_ROOT}/bin/slopguard-swift.sh",
+      "args": ["serve", "--transport", "stdio"]
+    }
+  }
+}

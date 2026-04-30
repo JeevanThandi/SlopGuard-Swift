@@ -1,0 +1,48 @@
+{
+  "coveredLines": 80,
+  "executableLines": 200,
+  "lineCoverage": 0.4,
+  "targets": [
+    {
+      "name": "MyApp",
+      "coveredLines": 80,
+      "executableLines": 200,
+      "lineCoverage": 0.4,
+      "files": [
+        {
+          "name": "Foo.swift",
+          "path": "/Users/dev/MyApp/Sources/Foo.swift",
+          "coveredLines": 30,
+          "executableLines": 100,
+          "lineCoverage": 0.3,
+          "functions": [
+            {
+              "name": "Foo.bar()",
+              "lineNumber": 10,
+              "executionCount": 1,
+              "coveredLines": 5,
+              "executableLines": 10,
+              "lineCoverage": 0.5
+            },
+            {
+              "name": "Foo.baz()",
+              "lineNumber": 30,
+              "executionCount": 0,
+              "coveredLines": 0,
+              "executableLines": 20,
+              "lineCoverage": 0.0
+            }
+          ]
+        },
+        {
+          "name": "Bar.swift",
+          "path": "/Users/dev/MyApp/Sources/Bar.swift",
+          "coveredLines": 50,
+          "executableLines": 100,
+          "lineCoverage": 0.5,
+          "functions": []
+        }
+      ]
+    }
+  ]
+}
