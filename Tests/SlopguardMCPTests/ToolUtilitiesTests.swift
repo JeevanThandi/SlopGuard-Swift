@@ -1,14 +1,13 @@
 import XCTest
 @testable import SlopguardMCP
 import SlopguardCoverage
-import MCP
 
 /// Pure-helper tests for ToolUtilities. Covers the value-coercion shims that
-/// the MCP tool handlers use to parse loosely-typed `[String: Value]` arguments.
+/// the MCP tool handlers use to parse loosely-typed `[String: JSONValue]` arguments.
 final class ToolUtilitiesTests: XCTestCase {
 
     func testStringExtractsPresentValue() {
-        let args: [String: Value] = ["k": .string("hello")]
+        let args: [String: JSONValue] = ["k": .string("hello")]
         XCTAssertEqual(ToolUtilities.string(args, "k"), "hello")
         XCTAssertNil(ToolUtilities.string(args, "missing"))
         XCTAssertNil(ToolUtilities.string(nil, "k"))
@@ -30,7 +29,7 @@ final class ToolUtilitiesTests: XCTestCase {
     }
 
     func testStringArrayFiltersNonStrings() {
-        let args: [String: Value] = [
+        let args: [String: JSONValue] = [
             "k": .array([.string("a"), .int(2), .string("b")])
         ]
         XCTAssertEqual(ToolUtilities.stringArray(args, "k"), ["a", "b"])
