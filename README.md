@@ -1,4 +1,4 @@
-# slopguard-swift
+# slopguard-swift (Alpha, not ready for use)
 
 > **Agentic-first quality guardrail for Swift / iOS.**
 
