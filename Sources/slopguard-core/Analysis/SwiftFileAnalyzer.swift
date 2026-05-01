@@ -26,8 +26,8 @@ public struct SwiftFileAnalyzer: Sendable {
         return try analyze(source: source, reportedPath: reportedPath ?? path)
     }
 
-    /// Analyze a file's source string directly. Useful for tests and the
-    /// `analyze_file` MCP tool when a buffer is supplied in-memory.
+    /// Analyze a file's source string directly. Useful for tests and any
+    /// caller that already has the source in memory.
     public func analyze(source: String, reportedPath: String) throws -> FileReport {
         let tree = Parser.parse(source: source)
         let converter = SourceLocationConverter(fileName: reportedPath, tree: tree)

@@ -9,20 +9,18 @@ import SlopguardCore
 public struct Slopguard: AsyncParsableCommand {
     public static let configuration = CommandConfiguration(
         commandName: "slopguard-swift",
-        abstract: "Agentic-first CRAP (Change Risk Anti-Patterns) guardrail for Swift / iOS.",
+        abstract: "CRAP (Change Risk Anti-Patterns) guardrail for Swift / iOS.",
         discussion: """
             slopguard-swift finds complex, undertested Swift code by combining cyclomatic \
-            complexity (parsed via SwiftSyntax) with Xcode coverage. Its primary \
-            interface is the MCP server (`slopguard-swift serve`); the CLI is a thin wrapper \
-            for CI use and quick one-off scans.
+            and cognitive complexity (parsed via SwiftSyntax) with Xcode coverage. Use \
+            `analyze` for one-shot scans and pipe `--json` into `jq` for downstream tooling.
 
-            Formula:  CRAP(m) = comp² × (1 − cov/100)³ + comp
+            Formula:  wCRAP(m) = (cyc × cog) × (1 − cov/100)³ + sqrt(cyc × cog)
             Default crappy threshold: 30.
             """,
         version: SlopguardVersion.version,
         subcommands: [
             AnalyzeCommand.self,
-            ServeCommand.self,
             VersionCommand.self
         ],
         defaultSubcommand: AnalyzeCommand.self

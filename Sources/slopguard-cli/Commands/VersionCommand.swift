@@ -11,8 +11,7 @@ struct VersionCommand: ParsableCommand {
     func run() throws {
         let payload = VersionPayload(
             name: SlopguardVersion.toolName,
-            version: SlopguardVersion.version,
-            mcpProtocol: SlopguardVersion.mcpProtocolVersion
+            version: SlopguardVersion.version
         )
         let encoder = JSONEncoder()
         encoder.outputFormatting = [.prettyPrinted, .sortedKeys, .withoutEscapingSlashes]
@@ -24,6 +23,5 @@ struct VersionCommand: ParsableCommand {
     private struct VersionPayload: Codable {
         let name: String
         let version: String
-        let mcpProtocol: String
     }
 }

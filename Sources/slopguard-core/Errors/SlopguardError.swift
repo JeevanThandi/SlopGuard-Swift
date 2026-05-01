@@ -19,8 +19,8 @@ public enum CoverageMissingReason: Sendable, Equatable {
 }
 
 /// Machine-readable error type. Every variant carries a stable string `code` so that
-/// CLI `--json` output and MCP error payloads remain consumable by agents without
-/// pattern-matching on free-text messages.
+/// CLI `--json` output stays consumable by agents without pattern-matching on
+/// free-text messages.
 public enum SlopguardError: Error, Sendable, CustomStringConvertible {
     case fileNotFound(path: String)
     case notADirectory(path: String)
@@ -40,7 +40,6 @@ public enum SlopguardError: Error, Sendable, CustomStringConvertible {
     case xcodebuildBuildFailed(exitCode: Int32, stderr: String)
     case invalidArgument(name: String, reason: String)
     case unsupported(reason: String)
-    case mcpToolError(name: String, reason: String)
 
     public var code: String { info.code }
     public var message: String { info.message }
@@ -95,13 +94,11 @@ public enum SlopguardError: Error, Sendable, CustomStringConvertible {
             return ("invalid_argument", "Invalid argument '\(name)': \(reason)")
         case .unsupported(let reason):
             return ("unsupported", "Unsupported: \(reason)")
-        case .mcpToolError(let name, let reason):
-            return ("mcp_tool_error", "MCP tool '\(name)' failed: \(reason)")
         }
     }
 }
 
-/// JSON-friendly envelope used by the CLI and MCP server.
+/// JSON-friendly envelope emitted on the CLI's `--json` error path.
 public struct SlopguardErrorEnvelope: Sendable, Codable {
     public let code: String
     public let message: String
