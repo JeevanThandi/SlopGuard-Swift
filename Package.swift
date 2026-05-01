@@ -1,12 +1,12 @@
 // swift-tools-version: 6.0
 //
-// slopguard-swift — Enterprise-grade, agentic-first CRAP guardrail for Swift/iOS.
+// slopguard-swift — CRAP guardrail for Swift / iOS.
 //
 // Targets:
 //   • SlopguardCore     — Pure analysis logic: CRAP formula, models, ComplexityVisitor.
 //   • SlopguardCoverage — Xcode coverage parsing via `xcrun xccov`.
-//   • SlopguardMCP      — Model Context Protocol server (the primary interface).
-//   • slopguard         — Thin CLI wrapper (analyze / serve / version).
+//   • SlopguardCLI      — ArgumentParser CLI (analyze / version).
+//   • slopguard-bin     — Thin executable entry point.
 
 import PackageDescription
 
@@ -18,7 +18,6 @@ let package = Package(
     products: [
         .library(name: "SlopguardCore", targets: ["SlopguardCore"]),
         .library(name: "SlopguardCoverage", targets: ["SlopguardCoverage"]),
-        .library(name: "SlopguardMCP", targets: ["SlopguardMCP"]),
         .library(name: "SlopguardCLI", targets: ["SlopguardCLI"]),
         .executable(name: "slopguard-swift", targets: ["slopguard-bin"])
     ],
@@ -46,17 +45,6 @@ let package = Package(
             swiftSettings: [.swiftLanguageMode(.v6)]
         ),
 
-        // MARK: MCP server
-        .target(
-            name: "SlopguardMCP",
-            dependencies: [
-                "SlopguardCore",
-                "SlopguardCoverage"
-            ],
-            path: "Sources/slopguard-mcp",
-            swiftSettings: [.swiftLanguageMode(.v6)]
-        ),
-
         // MARK: CLI library
         // Lives as a library so that:
         //   1. `SlopguardCLITests` can `@testable import SlopguardCLI`
@@ -68,7 +56,6 @@ let package = Package(
             dependencies: [
                 "SlopguardCore",
                 "SlopguardCoverage",
-                "SlopguardMCP",
                 .product(name: "ArgumentParser", package: "swift-argument-parser")
             ],
             path: "Sources/slopguard-cli",
@@ -95,12 +82,6 @@ let package = Package(
             dependencies: ["SlopguardCoverage"],
             path: "Tests/SlopguardCoverageTests",
             resources: [.copy("Fixtures")],
-            swiftSettings: [.swiftLanguageMode(.v6)]
-        ),
-        .testTarget(
-            name: "SlopguardMCPTests",
-            dependencies: ["SlopguardMCP"],
-            path: "Tests/SlopguardMCPTests",
             swiftSettings: [.swiftLanguageMode(.v6)]
         ),
         .testTarget(

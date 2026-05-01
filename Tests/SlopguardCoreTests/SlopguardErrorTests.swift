@@ -20,8 +20,7 @@ final class SlopguardErrorTests: XCTestCase {
             (.xcodebuildSchemeNotFound(projectDirectory: "/q"),               "xcodebuild_scheme_not_found", ["/q"]),
             (.xcodebuildBuildFailed(exitCode: 65, stderr: "compile error"),   "xcodebuild_build_failed", ["65", "compile error"]),
             (.invalidArgument(name: "path", reason: "missing"),               "invalid_argument",        ["path", "missing"]),
-            (.unsupported(reason: "no Linux"),                                "unsupported",             ["no Linux"]),
-            (.mcpToolError(name: "find_crappy_code", reason: "no report"),    "mcp_tool_error",          ["find_crappy_code", "no report"])
+            (.unsupported(reason: "no Linux"),                                "unsupported",             ["no Linux"])
         ]
         for (err, expectedCode, expectInMessage) in cases {
             XCTAssertEqual(err.code, expectedCode, "code mismatch for \(err)")

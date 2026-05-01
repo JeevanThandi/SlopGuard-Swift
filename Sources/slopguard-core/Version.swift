@@ -5,5 +5,4 @@ import Foundation
 public enum SlopguardVersion: Sendable {
     public static let version = "0.1.0"
     public static let toolName = "slopguard-swift"
-    public static let mcpProtocolVersion = "2024-11-05"
 }

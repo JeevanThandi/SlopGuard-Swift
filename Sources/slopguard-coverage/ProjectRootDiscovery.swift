@@ -5,11 +5,10 @@ import Foundation
 /// where `xcodebuild test` should run from when the user hasn't explicitly
 /// said otherwise.
 ///
-/// The MCP server has no useful CWD — clients spawn it and route source
-/// paths in via tool arguments. Treating the analyzed source URL as a hint
-/// to find the *real* project root means `analyze_directory(path: "Sources")`
-/// runs xcodebuild against the package whose `Sources/` folder that is, not
-/// against whatever directory the server happened to be launched from.
+/// Treating the analyzed source URL as a hint to find the *real* project
+/// root means `slopguard-swift analyze --path Sources` runs xcodebuild
+/// against the package whose `Sources/` folder that is, not against
+/// whatever the current working directory happens to be.
 public enum ProjectRootDiscovery {
 
     /// File / directory names that mark a Swift project root. Order matters

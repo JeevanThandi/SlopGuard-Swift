@@ -87,7 +87,7 @@ public struct MethodMetric: Sendable, Hashable, Codable {
         self.weightedComplexity = (Double(max(0, complexity)) * Double(max(0, cognitiveComplexity))).squareRoot()
     }
 
-    /// Stable identifier suitable for cross-tool references and as an MCP handle.
+    /// Stable identifier suitable for cross-tool references.
     /// Format: `relative/path.swift#Qualified.Name@startLine`.
     public var id: String { "\(file)#\(qualifiedName)@\(startLine)" }
 }

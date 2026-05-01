@@ -1,8 +1,7 @@
 import Foundation
 import SlopguardCore
 
-/// Orchestrates the full analyze → coverage-join → CRAP-report pipeline. Used by
-/// both the CLI and the MCP server so they emit identical reports.
+/// Orchestrates the full analyze → coverage-join → CRAP-report pipeline.
 ///
 /// Coverage is treated as an *internal artifact*: in `.auto` mode the pipeline
 /// drives `xcodebuild test` itself, ingests the resulting `.xcresult`, and
@@ -35,9 +34,8 @@ public struct AnalysisPipeline: Sendable {
     /// `projectDirectory == nil` means "discover from the analyzed source URL"
     /// — the pipeline walks up from the source path looking for the nearest
     /// `Package.swift` / `.xcodeproj` / `.xcworkspace`. That's the right
-    /// default for both MCP callers (no useful CWD) and CLI users analyzing
-    /// a subdirectory of a larger project. Set explicitly only when the
-    /// caller knows better than the auto-discovery.
+    /// default when the user analyzes a subdirectory of a larger project. Set
+    /// explicitly only when the caller knows better than the auto-discovery.
     public struct AutoCoverageOptions: Sendable {
         public var projectDirectory: URL?
         public var scheme: String?
@@ -183,9 +181,9 @@ public struct AnalysisPipeline: Sendable {
     /// When `.auto`'s `projectDirectory` is nil, walk up from `sourceURL` to
     /// find the nearest `Package.swift` / `.xcodeproj` / `.xcworkspace` —
     /// that's the right working directory for `xcodebuild test`. Without
-    /// this, MCP callers would build whatever package the server happens
-    /// to live next to instead of the user's project, producing an xcresult
-    /// whose paths never match the analyzed sources.
+    /// this, callers would build whatever package the current directory
+    /// contains instead of the user's project, producing an xcresult whose
+    /// paths never match the analyzed sources.
     private func resolveCoverage(_ source: CoverageSource, sourceURL: URL) async throws -> Resolved {
         switch source {
         case .none:

@@ -1,7 +1,7 @@
 import Foundation
 
-/// Top-level JSON payload emitted by the CLI (`--json`) and returned by MCP tools.
-/// Stable, versioned (`schemaVersion`) so agents can rely on the shape.
+/// Top-level JSON payload emitted by the CLI's `--json` flag.
+/// Stable, versioned (`schemaVersion`) so downstream tooling can rely on the shape.
 public struct CrapReport: Sendable, Hashable, Codable {
     /// Schema 2 (current): adds `cognitiveComplexity` + `weightedComplexity`
     /// throughout, and re-points the `crap` / `aggregatedCrap` formula at the

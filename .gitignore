@@ -7,6 +7,9 @@ xcuserdata/
 *.xcodeproj/xcuserdata/
 *.xcworkspace/xcuserdata/
 *.xcresult/
+# Xcode silently recreates a top-level workspace when the user opens
+# the package; we don't want to track the recreated artifact.
+/slopguard.xcworkspace/
 .DS_Store
 Package.resolved.bak
 *.swp
