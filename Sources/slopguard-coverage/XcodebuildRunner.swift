@@ -30,7 +30,8 @@ public struct XcodebuildRunner: Sendable {
         scheme: String? = nil,
         destination: String = "platform=macOS",
         projectDirectory: URL = URL(fileURLWithPath: FileManager.default.currentDirectoryPath),
-        resultBundleURL: URL
+        resultBundleURL: URL,
+        progress: ProgressReporter = .silent
     ) async throws -> (resultBundle: URL, testsPassed: Bool) {
         let projectPath = projectDirectory.standardizedFileURL.path
         let bundlePath = resultBundleURL.standardizedFileURL.path
@@ -39,17 +40,20 @@ public struct XcodebuildRunner: Sendable {
         if let scheme {
             resolvedScheme = scheme
         } else {
+            progress.phase("discovering xcodebuild scheme in \(projectPath)")
             resolvedScheme = try await Self.detached {
                 try Self.discoverDefaultScheme(projectDirectory: projectPath)
             }
         }
 
+        progress.phase("running xcodebuild test (scheme '\(resolvedScheme)', destination '\(destination)') — this can take several minutes")
         let testsPassed = try await Self.detached {
             try Self.runXcodebuildTest(
                 scheme: resolvedScheme,
                 destination: destination,
                 projectDirectory: projectPath,
-                resultBundlePath: bundlePath
+                resultBundlePath: bundlePath,
+                progress: progress
             )
         }
 
@@ -116,7 +120,8 @@ public struct XcodebuildRunner: Sendable {
         scheme: String,
         destination: String,
         projectDirectory: String,
-        resultBundlePath: String
+        resultBundlePath: String,
+        progress: ProgressReporter = .silent
     ) throws -> Bool {
         let process = Process()
         process.executableURL = URL(fileURLWithPath: "/usr/bin/xcrun")
@@ -129,15 +134,23 @@ public struct XcodebuildRunner: Sendable {
         ]
         process.currentDirectoryURL = URL(fileURLWithPath: projectDirectory)
 
-        // Discard subprocess chatter — we don't surface it. xcresult is the artifact.
+        // Drain xcodebuild's stdout/stderr — discard by default, stream to the
+        // progress reporter under `--verbose`. Either way the pipe must be
+        // drained or the subprocess will block once its kernel buffer fills.
         let sink = Pipe()
         process.standardOutput = sink
         process.standardError = sink
 
         try launch(process)
-        // Drain in the background so the pipe buffer doesn't fill and deadlock.
-        sink.fileHandleForReading.readabilityHandler = { handle in
-            _ = handle.availableData
+        if progress.isVerbose {
+            sink.fileHandleForReading.readabilityHandler = { handle in
+                let chunk = handle.availableData
+                if !chunk.isEmpty { progress.raw(chunk) }
+            }
+        } else {
+            sink.fileHandleForReading.readabilityHandler = { handle in
+                _ = handle.availableData
+            }
         }
         process.waitUntilExit()
         sink.fileHandleForReading.readabilityHandler = nil
