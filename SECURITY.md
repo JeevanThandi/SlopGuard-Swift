@@ -37,8 +37,8 @@ Specifically, slopguard-swift does **not**:
 
 ## Supply-chain integrity
 
-* Every release is **signed with a Developer ID Application certificate** and **notarized by Apple** via `xcrun notarytool`.
 * Every release ships with a **SHA-256 checksum** of every artifact and a **CycloneDX SBOM** listing all transitive dependencies and their resolved versions (`Package.resolved` + git SHAs).
+* **v0.1.x release binaries are not yet code-signed or notarized.** The release pipeline supports Developer ID signing + Apple notarization via `xcrun notarytool` and will produce signed binaries once credentials are provisioned (planned before v0.2). Until then: verify the published SHA-256 checksum, or build from source. macOS Gatekeeper will quarantine the downloaded binary — clear it with `xattr -d com.apple.quarantine slopguard-swift` after verifying the checksum.
 * Reproducibility: builds from the same commit on `macos-14` reproduce byte-for-byte modulo notarization timestamps.
 
 ## Dependencies
