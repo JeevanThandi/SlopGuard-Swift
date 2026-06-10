@@ -13,14 +13,14 @@ struct AnalyzeCommand: AsyncParsableCommand {
 
             Examples:
               slopguard-swift analyze --path Sources --threshold 30 --json
-              slopguard-swift analyze --path Sources --scheme MyApp-Package --destination 'platform=iOS Simulator,name=iPhone 15'
+              slopguard-swift analyze --path Sources --scheme MyApp-Package --destination 'platform=iOS Simulator,name=iPhone 16'
               slopguard-swift analyze --path . --fail-over 50      # fail CI when any method's CRAP > 50
               slopguard-swift analyze --path Sources --no-coverage # skip the test build (complexity-only)
             """
     )
 
-    @Option(name: [.short, .long], help: "Directory of Swift sources, or a single .swift file.")
-    var path: String
+    @Option(name: [.short, .long], help: "Directory of Swift sources, or a single .swift file. Defaults to the current directory.")
+    var path: String = "."
 
     @Option(name: [.short, .long], help: "CRAP threshold above which a method/class is considered crappy.")
     var threshold: Double = CRAP.defaultThreshold
@@ -53,6 +53,12 @@ struct AnalyzeCommand: AsyncParsableCommand {
     @Option(name: .long, help: "Exit with code 2 if any method's CRAP exceeds this value. Useful in CI.")
     var failOver: Double?
 
+    @Flag(name: [.short, .long], help: "Stream xcodebuild output and other subprocess chatter to stderr. Use when you suspect xcodebuild itself is misbehaving.")
+    var verbose: Bool = false
+
+    @Flag(name: .long, help: "Suppress all progress chatter on stderr. Phase markers and subprocess output are silenced. JSON / pretty output on stdout is unaffected.")
+    var quiet: Bool = false
+
     /// Hidden escape hatch — used by tests / CI fixtures that already have an
     /// `.xcresult`. End users should let slopguard generate one itself.
     @Option(name: .customLong("xcresult"), help: .hidden)
@@ -69,13 +75,15 @@ struct AnalyzeCommand: AsyncParsableCommand {
         )
         let coverage = resolveCoverageSource()
 
+        let progress = resolveProgressReporter()
         let report: CrapReport
         do {
             report = try await pipeline.run(
                 sourceURL: sourceURL,
                 coverage: coverage,
                 threshold: threshold,
-                options: options
+                options: options,
+                progress: progress
             )
         } catch let error as SlopguardError {
             try emitError(.init(error))
@@ -119,6 +127,14 @@ struct AnalyzeCommand: AsyncParsableCommand {
         } else {
             FileHandle.standardError.write(Data((CrapReportFormatter.errorText(env) + "\n").utf8))
         }
+    }
+
+    /// `--quiet` wins over `--verbose` if both are passed; if neither is
+    /// passed we emit the default phase markers. Internal (not private) so
+    /// the CLI tests can assert the flag → verbosity mapping.
+    func resolveProgressReporter() -> ProgressReporter {
+        if quiet { return .silent }
+        return .stderr(verbosity: verbose ? .verbose : .normal)
     }
 
     private func resolveCoverageSource() -> AnalysisPipeline.CoverageSource {

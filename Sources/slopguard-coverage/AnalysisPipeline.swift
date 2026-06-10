@@ -106,11 +106,15 @@ public struct AnalysisPipeline: Sendable {
         sourceURL: URL,
         coverage: CoverageSource = .auto(),
         threshold: Double = CRAP.defaultThreshold,
-        options: AnalysisOptions = .default
+        options: AnalysisOptions = .default,
+        progress: ProgressReporter = .silent
     ) async throws -> CrapReport {
+        progress.phase("walking \(sourceURL.path)")
         let fileReports = try await analyzer.analyze(rootURL: sourceURL, options: options)
+        let methodCount = fileReports.reduce(0) { $0 + $1.methods.count }
+        progress.phase("parsed \(fileReports.count) Swift file(s), \(methodCount) method(s)")
 
-        let resolved = try await resolveCoverage(coverage, sourceURL: sourceURL)
+        let resolved = try await resolveCoverage(coverage, sourceURL: sourceURL, progress: progress)
         defer { resolved.cleanup() }
 
         let provider: (any CoverageProvider)?
@@ -118,6 +122,7 @@ public struct AnalysisPipeline: Sendable {
         var notes: [String] = []
         if let url = resolved.xcresultURL {
             do {
+                progress.phase("parsing xcresult coverage")
                 let report = try await xccov.runReport(xcresultURL: url)
                 provider = CoverageIndex(report: report)
                 // Ephemeral xcresults (auto mode) are deleted on `defer` below — don't
@@ -184,7 +189,7 @@ public struct AnalysisPipeline: Sendable {
     /// this, callers would build whatever package the current directory
     /// contains instead of the user's project, producing an xcresult whose
     /// paths never match the analyzed sources.
-    private func resolveCoverage(_ source: CoverageSource, sourceURL: URL) async throws -> Resolved {
+    private func resolveCoverage(_ source: CoverageSource, sourceURL: URL, progress: ProgressReporter) async throws -> Resolved {
         switch source {
         case .none:
             return .init(xcresultURL: nil, isEphemeral: false, cleanup: {})
@@ -203,7 +208,8 @@ public struct AnalysisPipeline: Sendable {
                 scheme: opts.scheme,
                 destination: opts.destination,
                 projectDirectory: projectDirectory,
-                resultBundleURL: bundleURL
+                resultBundleURL: bundleURL,
+                progress: progress
             )
             return .init(
                 xcresultURL: outcome.resultBundle,

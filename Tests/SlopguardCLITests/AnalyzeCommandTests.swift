@@ -147,6 +147,38 @@ final class AnalyzeCommandTests: XCTestCase {
         try await cmd.run()
     }
 
+    // MARK: - Progress flags
+
+    /// Default (no flags) → phase markers on stderr at normal verbosity.
+    func testProgressDefaultsToNormal() throws {
+        let cmd = try parse(["--path", "."])
+        XCTAssertEqual(cmd.resolveProgressReporter().verbosity, .normal)
+    }
+
+    func testVerboseFlagYieldsVerboseReporter() throws {
+        let cmd = try parse(["--path", ".", "--verbose"])
+        XCTAssertEqual(cmd.resolveProgressReporter().verbosity, .verbose)
+    }
+
+    func testQuietFlagYieldsSilentReporter() throws {
+        let cmd = try parse(["--path", ".", "--quiet"])
+        XCTAssertEqual(cmd.resolveProgressReporter().verbosity, .silent)
+    }
+
+    /// `--quiet` wins when both flags are passed.
+    func testQuietBeatsVerbose() throws {
+        let cmd = try parse(["--path", ".", "--quiet", "--verbose"])
+        XCTAssertEqual(cmd.resolveProgressReporter().verbosity, .silent)
+    }
+
+    // MARK: - Path default
+
+    /// Bare `slopguard-swift analyze` analyzes the current directory.
+    func testPathDefaultsToCurrentDirectory() throws {
+        let cmd = try parse([])
+        XCTAssertEqual(cmd.path, ".")
+    }
+
     /// `--no-default-excludes` brings test code back into the report.
     func testNoDefaultExcludesAnalyzesTestCode() async throws {
         try writeFixture("struct ATests {}", named: "FooTests.swift")
