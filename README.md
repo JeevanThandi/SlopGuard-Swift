@@ -1,5 +1,7 @@
 # slopguard-swift (Alpha, not ready for use)
 
+[![CI](https://github.com/JeevanThandi/SlopGuard-Swift/actions/workflows/ci.yml/badge.svg)](https://github.com/JeevanThandi/SlopGuard-Swift/actions/workflows/ci.yml)
+
 > **CRAP (Change Risk Anti-Patterns) guardrail for Swift / iOS.**
 
 `slopguard-swift` measures **complex, undertested code** in Swift sources. It computes a weighted CRAP score combining cyclomatic and cognitive complexity with line coverage, and prints a structured report you can pipe into `jq` or fail CI on.
@@ -17,7 +19,7 @@ wCRAP(m) = (cyc × cog) × (1 − cov/100)³ + sqrt(cyc × cog)
 ## Install
 
 ```bash
-git clone git@github.com:JeevanThandi/SlopGuard-Swift.git
+git clone https://github.com/JeevanThandi/SlopGuard-Swift.git
 cd SlopGuard-Swift
 swift build -c release
 cp .build/release/slopguard-swift /usr/local/bin
@@ -28,11 +30,14 @@ Requires Xcode 16 / Swift 6.0+ on macOS 13+.
 ## Quickstart
 
 ```bash
-# Scan a directory and print the top crappy methods (drives xcodebuild test for coverage)
+# Zero-config: analyze the current directory (drives xcodebuild test for coverage)
+slopguard-swift
+
+# Scan a specific directory and print the top crappy methods
 slopguard-swift analyze --path Sources --threshold 30
 
 # iOS app: pick a scheme and destination
-slopguard-swift analyze --path . --scheme MyApp --destination 'platform=iOS Simulator,name=iPhone 17'
+slopguard-swift analyze --path . --scheme MyApp --destination 'platform=iOS Simulator,name=iPhone 16'
 
 # Full JSON for CI / downstream tooling
 slopguard-swift analyze --path Sources --json | jq '.methods | sort_by(-.crap)[:10]'
@@ -44,6 +49,10 @@ slopguard-swift analyze --path Sources --fail-over 50
 slopguard-swift analyze --path Sources --no-coverage
 ```
 
+Progress markers (`slopguard: running xcodebuild test…`) go to **stderr**, so
+piped stdout stays clean. `--verbose` streams the underlying xcodebuild output
+through; `--quiet` silences progress entirely.
+
 ## Subcommands
 
 | Command   | Purpose |
@@ -51,7 +60,8 @@ slopguard-swift analyze --path Sources --no-coverage
 | `analyze` | Walk a directory of Swift sources, drive `xcodebuild test` for coverage, emit a wCRAP report (text or JSON). |
 | `version` | Print version metadata as JSON. |
 
-`analyze` is the default subcommand — `slopguard-swift --path Sources` works.
+`analyze` is the default subcommand and `--path` defaults to the current
+directory — a bare `slopguard-swift` in your project root just works.
 
 ## JSON output
 
@@ -103,7 +113,7 @@ All targets build under **Swift 6 strict concurrency**, target **macOS 13+**.
 
 ```bash
 swift build
-swift test                                                    # 124 unit tests
+swift test                                                    # unit tests
 swift run slopguard-swift analyze --path Sources              # dogfood
 swift run slopguard-swift analyze --path SampleApps/TodoList  # known-good fixture
 ```
@@ -118,4 +128,4 @@ We dogfood slopguard-swift against its own sources *and* against the [`SampleApp
 
 ## Contributing
 
-Open an issue, open a PR. CI runs on `macos-14` with strict Swift 6 concurrency, and we eat our own dog food (`swift run slopguard-swift analyze --path Sources` is part of the pipeline).
+Open an issue, open a PR. CI runs on `macos-15` with strict Swift 6 concurrency, and we eat our own dog food: every CI run analyzes slopguard's own sources *and* asserts the full-coverage baseline report on `SampleApps/TodoList`.

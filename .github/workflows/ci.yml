@@ -10,14 +10,19 @@ on:
 jobs:
   build-and-test:
     name: Build & test (macOS)
-    runs-on: macos-14
+    runs-on: macos-15
     timeout-minutes: 25
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Select Xcode 16
-        run: sudo xcode-select -s /Applications/Xcode_16.0.app/Contents/Developer
+      # Pick the newest Xcode on the runner instead of hard-coding a path —
+      # hard-coded versions rot when the runner image rotates.
+      - name: Select latest Xcode
+        run: |
+          LATEST=$(ls -d /Applications/Xcode_*.app | sort -V | tail -n1)
+          echo "Selecting $LATEST"
+          sudo xcode-select -s "$LATEST/Contents/Developer"
 
       - name: Print toolchain
         run: |
@@ -33,26 +38,47 @@ jobs:
       - name: Test
         run: swift test --parallel
 
+      # Complexity-only here (fast); the TodoList step below exercises the
+      # full xcodebuild → xccov → wCRAP chain end-to-end.
       - name: Dogfood — analyze our own sources
-        run: swift run slopguard analyze --path Sources --threshold 30 --json > slopguard-self.json
+        run: swift run slopguard-swift analyze --path Sources --no-coverage --threshold 30 --json > slopguard-self.json
+
+      # The fixture app is deliberately tiny, fully covered, low-complexity.
+      # Its report is a fixed baseline — drift here is a regression in the
+      # analyzer itself (see README "Development").
+      - name: End-to-end baseline — SampleApps/TodoList
+        run: |
+          swift run slopguard-swift analyze --path SampleApps/TodoList --json > todolist-baseline.json
+          jq -e '
+            .coverageAvailable == true
+            and .summary.methodCount == 11
+            and .summary.crappyMethodCount == 0
+            and .summary.crappyTypeCount == 0
+            and .summary.weightedCoverage == 100
+          ' todolist-baseline.json
 
       - name: Upload self-analysis
         uses: actions/upload-artifact@v4
         with:
           name: slopguard-self-analysis
-          path: slopguard-self.json
+          path: |
+            slopguard-self.json
+            todolist-baseline.json
           if-no-files-found: error
 
   release-build:
     name: Release build (universal)
-    runs-on: macos-14
+    runs-on: macos-15
     timeout-minutes: 25
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Select Xcode 16
-        run: sudo xcode-select -s /Applications/Xcode_16.0.app/Contents/Developer
+      - name: Select latest Xcode
+        run: |
+          LATEST=$(ls -d /Applications/Xcode_*.app | sort -V | tail -n1)
+          echo "Selecting $LATEST"
+          sudo xcode-select -s "$LATEST/Contents/Developer"
 
       - name: Build release (universal)
         run: |
@@ -62,5 +88,5 @@ jobs:
 
       - name: Smoke test the release binary
         run: |
-          ./.build/apple/Products/Release/slopguard version
-          ./.build/apple/Products/Release/slopguard analyze --path Sources --threshold 30 --json > /dev/null
+          ./.build/apple/Products/Release/slopguard-swift version
+          ./.build/apple/Products/Release/slopguard-swift analyze --path Sources --no-coverage --threshold 30 --json > /dev/null

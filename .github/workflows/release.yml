@@ -24,8 +24,13 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Select Xcode 16
-        run: sudo xcode-select -s /Applications/Xcode_16.0.app/Contents/Developer
+      # Pick the newest Xcode on the runner instead of hard-coding a path —
+      # hard-coded versions rot when the runner image rotates.
+      - name: Select latest Xcode
+        run: |
+          LATEST=$(ls -d /Applications/Xcode_*.app | sort -V | tail -n1)
+          echo "Selecting $LATEST"
+          sudo xcode-select -s "$LATEST/Contents/Developer"
 
       - name: Resolve version
         id: version
@@ -51,7 +56,7 @@ jobs:
         run: |
           swift build -c release --arch arm64 --arch x86_64
           mkdir -p dist
-          cp .build/apple/Products/Release/slopguard dist/slopguard
+          cp .build/apple/Products/Release/slopguard-swift dist/slopguard-swift
 
       # Code signing requires three secrets:
       #   APPLE_DEV_ID_CERT_BASE64  — base64 of a .p12 containing a Developer ID Application certificate
@@ -85,8 +90,8 @@ jobs:
         run: |
           codesign --force --options runtime --timestamp \
               --sign "$IDENTITY" \
-              dist/slopguard
-          codesign --verify --verbose=2 dist/slopguard
+              dist/slopguard-swift
+          codesign --verify --verbose=2 dist/slopguard-swift
 
       # Notarization requires:
       #   APPLE_NOTARY_PROFILE — name of a stored notarytool credential profile (preferred), OR
@@ -99,8 +104,8 @@ jobs:
           TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
           APP_PASSWORD: ${{ secrets.APPLE_APP_PASSWORD }}
         run: |
-          ZIP=dist/slopguard.zip
-          /usr/bin/ditto -c -k --keepParent dist/slopguard "$ZIP"
+          ZIP=dist/slopguard-swift.zip
+          /usr/bin/ditto -c -k --keepParent dist/slopguard-swift "$ZIP"
           if [ -n "$PROFILE" ]; then
               xcrun notarytool submit "$ZIP" --keychain-profile "$PROFILE" --wait
           else
@@ -111,18 +116,18 @@ jobs:
           # offline verification, the .zip we ship can be re-notarized as a wrapper.
 
       - name: Generate SBOM
-        run: ./Scripts/sbom.sh dist/slopguard-${{ steps.version.outputs.version }}-sbom.json
+        run: ./Scripts/sbom.sh dist/slopguard-swift-${{ steps.version.outputs.version }}-sbom.json
 
       - name: Package tarball
         id: pkg
         run: |
-          NAME="slopguard-${{ steps.version.outputs.version }}-macos-universal"
+          NAME="slopguard-swift-${{ steps.version.outputs.version }}-macos-universal"
           mkdir -p "dist/$NAME"
-          cp dist/slopguard "dist/$NAME/slopguard"
+          cp dist/slopguard-swift "dist/$NAME/slopguard-swift"
           cp LICENSE README.md SECURITY.md "dist/$NAME/"
           tar -C dist -czf "dist/$NAME.tar.gz" "$NAME"
           (cd dist && shasum -a 256 "$NAME.tar.gz" > "$NAME.tar.gz.sha256")
-          shasum -a 256 dist/slopguard > dist/slopguard.sha256
+          shasum -a 256 dist/slopguard-swift > dist/slopguard-swift.sha256
           echo "name=$NAME" >> $GITHUB_OUTPUT
 
       - name: Create GitHub Release
@@ -132,8 +137,8 @@ jobs:
           files: |
             dist/${{ steps.pkg.outputs.name }}.tar.gz
             dist/${{ steps.pkg.outputs.name }}.tar.gz.sha256
-            dist/slopguard.sha256
-            dist/slopguard-${{ steps.version.outputs.version }}-sbom.json
+            dist/slopguard-swift.sha256
+            dist/slopguard-swift-${{ steps.version.outputs.version }}-sbom.json
           draft: false
           prerelease: ${{ contains(steps.version.outputs.tag, '-') }}
           generate_release_notes: true
