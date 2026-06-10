@@ -94,7 +94,7 @@ Test coverage alone says "this code ran in a test"; complexity alone says "this 
 * **Zero runtime dependencies beyond Xcode.** The only subprocesses slopguard-swift spawns are `xcrun xcodebuild` and `xcrun xccov`.
 * **Two top-level Swift dependencies** — both upstream Apple swiftlang: `swift-syntax` (Apache-2.0) and `swift-argument-parser` (Apache-2.0). No transitive deps.
 * **No network, no telemetry, no source mutation.**
-* **Signed, notarized, and SBOM'd** release binaries. See [`SECURITY.md`](SECURITY.md).
+* **SBOM'd and SHA-256-checksummed** release binaries. v0.1.x binaries are not yet code-signed or notarized — verify the checksum, or build from source. Signing + notarization are planned before v0.2. See [`SECURITY.md`](SECURITY.md).
 * **MIT licensed** ([`LICENSE`](LICENSE)).
 
 ## Architecture
