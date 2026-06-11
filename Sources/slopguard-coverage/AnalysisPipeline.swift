@@ -41,17 +41,20 @@ public struct AnalysisPipeline: Sendable {
         public var workspace: URL?
         public var scheme: String?
         public var destination: String
+        public var onlyTesting: [String]
 
         public init(
             projectDirectory: URL? = nil,
             workspace: URL? = nil,
             scheme: String? = nil,
-            destination: String = "platform=macOS"
+            destination: String = "platform=macOS",
+            onlyTesting: [String] = []
         ) {
             self.projectDirectory = projectDirectory
             self.workspace = workspace
             self.scheme = scheme
             self.destination = destination
+            self.onlyTesting = onlyTesting
         }
     }
 
@@ -76,6 +79,7 @@ public struct AnalysisPipeline: Sendable {
             workspace: String?,
             destination: String,
             projectDir: String?,
+            onlyTesting: [String] = [],
             cwd: URL = URL(fileURLWithPath: FileManager.default.currentDirectoryPath, isDirectory: true)
         ) -> CoverageSource {
             // `URL(fileURLWithPath: "x", relativeTo: cwd)` resolves "x" against
@@ -95,7 +99,8 @@ public struct AnalysisPipeline: Sendable {
                 projectDirectory: projectDirectory,
                 workspace: workspace.map { resolveURL($0, cwd: cwdDir) },
                 scheme: scheme,
-                destination: destination
+                destination: destination,
+                onlyTesting: onlyTesting
             ))
         }
 
@@ -217,6 +222,7 @@ public struct AnalysisPipeline: Sendable {
                 destination: opts.destination,
                 projectDirectory: projectDirectory,
                 resultBundleURL: bundleURL,
+                onlyTesting: opts.onlyTesting,
                 progress: progress
             )
             return .init(
