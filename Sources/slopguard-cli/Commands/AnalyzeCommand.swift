@@ -15,6 +15,7 @@ struct AnalyzeCommand: AsyncParsableCommand {
               slopguard-swift analyze --path Sources --threshold 30 --json
               slopguard-swift analyze --path Sources --scheme MyApp-Package --destination 'platform=iOS Simulator,name=iPhone 16'
               slopguard-swift analyze --path . --workspace MyApp.xcworkspace --scheme MyApp # CocoaPods-style workspace
+              slopguard-swift analyze --path Sources/Login --only-testing MyAppTests/LoginTests # scope the test run
               slopguard-swift analyze --path . --fail-over 50      # fail CI when any method's CRAP > 50
               slopguard-swift analyze --path Sources --no-coverage # skip the test build (complexity-only)
             """
@@ -37,6 +38,10 @@ struct AnalyzeCommand: AsyncParsableCommand {
 
     @Option(name: .long, help: "Project directory passed as cwd to xcodebuild. Defaults to the current directory.")
     var projectDir: String?
+
+    @Option(name: .customLong("only-testing"), parsing: .upToNextOption,
+            help: "Test identifier(s) forwarded to xcodebuild as -only-testing:<id> (e.g. MyAppTests or MyAppTests/LoginTests). Repeat or pass space-separated. Scopes the test run instead of running the whole suite — code the selected tests don't exercise reports 0% coverage.")
+    var onlyTesting: [String] = []
 
     @Flag(name: .long, help: "Skip the xcodebuild step and report complexity only (every method shows 0% coverage).")
     var noCoverage: Bool = false
@@ -148,7 +153,8 @@ struct AnalyzeCommand: AsyncParsableCommand {
             scheme: scheme,
             workspace: workspace,
             destination: destination,
-            projectDir: projectDir
+            projectDir: projectDir,
+            onlyTesting: onlyTesting
         )
     }
 }
