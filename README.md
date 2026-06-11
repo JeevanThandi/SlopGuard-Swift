@@ -42,6 +42,10 @@ slopguard-swift analyze --path . --scheme MyApp --destination 'platform=iOS Simu
 # CocoaPods-style project: point xcodebuild at the workspace explicitly
 slopguard-swift analyze --path . --workspace MyApp.xcworkspace --scheme MyApp
 
+# Measuring one module? Scope the test run instead of running the whole suite
+# (code the selected tests don't exercise reports 0% coverage)
+slopguard-swift analyze --path Sources/Login --only-testing MyAppTests/LoginTests
+
 # Full JSON for CI / downstream tooling
 slopguard-swift analyze --path Sources --json | jq '.methods | sort_by(-.crap)[:10]'
 
