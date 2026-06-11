@@ -21,6 +21,10 @@ public struct XcodebuildRunner: Sendable {
     /// - Parameters:
     ///   - scheme:           Explicit scheme. When `nil`, discover via
     ///                       `xcodebuild -list -json`.
+    ///   - workspace:        Explicit `.xcworkspace` passed as `-workspace` to
+    ///                       both scheme discovery and the test run. When `nil`,
+    ///                       xcodebuild picks up whatever the working directory
+    ///                       contains.
     ///   - destination:      e.g. `"platform=macOS"`.
     ///   - projectDirectory: Working directory for `xcodebuild` (defaults to cwd).
     ///   - resultBundleURL:  Where to write the `.xcresult` bundle.
@@ -28,21 +32,23 @@ public struct XcodebuildRunner: Sendable {
     ///   test failures don't — partial coverage is still useful.
     public func runTests(
         scheme: String? = nil,
+        workspace: URL? = nil,
         destination: String = "platform=macOS",
         projectDirectory: URL = URL(fileURLWithPath: FileManager.default.currentDirectoryPath),
         resultBundleURL: URL,
         progress: ProgressReporter = .silent
     ) async throws -> (resultBundle: URL, testsPassed: Bool) {
         let projectPath = projectDirectory.standardizedFileURL.path
+        let workspacePath = workspace?.standardizedFileURL.path
         let bundlePath = resultBundleURL.standardizedFileURL.path
 
         let resolvedScheme: String
         if let scheme {
             resolvedScheme = scheme
         } else {
-            progress.phase("discovering xcodebuild scheme in \(projectPath)")
+            progress.phase("discovering xcodebuild scheme in \(workspacePath ?? projectPath)")
             resolvedScheme = try await Self.detached {
-                try Self.discoverDefaultScheme(projectDirectory: projectPath)
+                try Self.discoverDefaultScheme(projectDirectory: projectPath, workspace: workspacePath)
             }
         }
 
@@ -50,6 +56,7 @@ public struct XcodebuildRunner: Sendable {
         let testsPassed = try await Self.detached {
             try Self.runXcodebuildTest(
                 scheme: resolvedScheme,
+                workspace: workspacePath,
                 destination: destination,
                 projectDirectory: projectPath,
                 resultBundlePath: bundlePath,
@@ -65,8 +72,8 @@ public struct XcodebuildRunner: Sendable {
     /// SwiftPM packages expose a `<name>-Package` umbrella scheme that runs
     /// every test target. Prefer that. Otherwise fall back to a single
     /// available scheme; bail out when there's ambiguity rather than guess.
-    static func discoverDefaultScheme(projectDirectory: String) throws -> String {
-        let data = try runXcodebuildList(projectDirectory: projectDirectory)
+    static func discoverDefaultScheme(projectDirectory: String, workspace: String? = nil) throws -> String {
+        let data = try runXcodebuildList(projectDirectory: projectDirectory, workspace: workspace)
         let schemes = try decodeSchemes(data: data)
         guard !schemes.isEmpty else {
             throw SlopguardError.xcodebuildSchemeNotFound(projectDirectory: projectDirectory)
@@ -80,10 +87,10 @@ public struct XcodebuildRunner: Sendable {
         throw SlopguardError.xcodebuildSchemeAmbiguous(schemes: schemes)
     }
 
-    static func runXcodebuildList(projectDirectory: String) throws -> Data {
+    static func runXcodebuildList(projectDirectory: String, workspace: String? = nil) throws -> Data {
         try ProcessRunner.runOrThrow(
             executable: "/usr/bin/xcrun",
-            arguments: ["xcodebuild", "-list", "-json"],
+            arguments: listArguments(workspace: workspace),
             cwd: projectDirectory,
             launchError: { SlopguardError.xcodebuildUnavailable(reason: "Could not launch xcrun: \($0)") },
             failureError: { SlopguardError.xcodebuildBuildFailed(exitCode: $0, stderr: $1) }
@@ -110,6 +117,33 @@ public struct XcodebuildRunner: Sendable {
         return decoded.workspace?.schemes ?? decoded.project?.schemes ?? []
     }
 
+    /// Argument vectors for the two xcodebuild invocations, kept pure so the
+    /// `-workspace` plumbing is unit-testable without spawning a subprocess.
+    /// An explicit workspace must reach *both* calls: scheme discovery against
+    /// the wrong container yields a scheme `xcodebuild test` can't build.
+    static func listArguments(workspace: String?) -> [String] {
+        var args = ["xcodebuild", "-list", "-json"]
+        if let workspace { args += ["-workspace", workspace] }
+        return args
+    }
+
+    static func testArguments(
+        scheme: String,
+        workspace: String?,
+        destination: String,
+        resultBundlePath: String
+    ) -> [String] {
+        var args = ["xcodebuild", "test"]
+        if let workspace { args += ["-workspace", workspace] }
+        args += [
+            "-scheme", scheme,
+            "-destination", destination,
+            "-resultBundlePath", resultBundlePath,
+            "-enableCodeCoverage", "YES"
+        ]
+        return args
+    }
+
     /// Invoke `xcodebuild test` and stream its output to `/dev/null`. We only
     /// care about the produced `.xcresult` and the exit code.
     ///
@@ -118,6 +152,7 @@ public struct XcodebuildRunner: Sendable {
     /// bundle means the build itself broke — abort.
     static func runXcodebuildTest(
         scheme: String,
+        workspace: String? = nil,
         destination: String,
         projectDirectory: String,
         resultBundlePath: String,
@@ -125,13 +160,12 @@ public struct XcodebuildRunner: Sendable {
     ) throws -> Bool {
         let process = Process()
         process.executableURL = URL(fileURLWithPath: "/usr/bin/xcrun")
-        process.arguments = [
-            "xcodebuild", "test",
-            "-scheme", scheme,
-            "-destination", destination,
-            "-resultBundlePath", resultBundlePath,
-            "-enableCodeCoverage", "YES"
-        ]
+        process.arguments = testArguments(
+            scheme: scheme,
+            workspace: workspace,
+            destination: destination,
+            resultBundlePath: resultBundlePath
+        )
         process.currentDirectoryURL = URL(fileURLWithPath: projectDirectory)
 
         // Drain xcodebuild's stdout/stderr — discard by default, stream to the

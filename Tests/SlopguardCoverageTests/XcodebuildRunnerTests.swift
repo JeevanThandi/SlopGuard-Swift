@@ -39,6 +39,51 @@ final class XcodebuildRunnerTests: XCTestCase {
         }
     }
 
+    // MARK: - Argument construction (-workspace plumbing)
+
+    func testListArgumentsWithoutWorkspace() {
+        XCTAssertEqual(XcodebuildRunner.listArguments(workspace: nil),
+                       ["xcodebuild", "-list", "-json"])
+    }
+
+    func testListArgumentsWithWorkspace() {
+        XCTAssertEqual(XcodebuildRunner.listArguments(workspace: "/proj/MyApp.xcworkspace"),
+                       ["xcodebuild", "-list", "-json", "-workspace", "/proj/MyApp.xcworkspace"])
+    }
+
+    func testTestArgumentsWithoutWorkspace() {
+        XCTAssertEqual(
+            XcodebuildRunner.testArguments(
+                scheme: "MyApp",
+                workspace: nil,
+                destination: "platform=macOS",
+                resultBundlePath: "/tmp/r.xcresult"
+            ),
+            ["xcodebuild", "test",
+             "-scheme", "MyApp",
+             "-destination", "platform=macOS",
+             "-resultBundlePath", "/tmp/r.xcresult",
+             "-enableCodeCoverage", "YES"]
+        )
+    }
+
+    func testTestArgumentsWithWorkspace() {
+        XCTAssertEqual(
+            XcodebuildRunner.testArguments(
+                scheme: "MyApp",
+                workspace: "/proj/MyApp.xcworkspace",
+                destination: "platform=macOS",
+                resultBundlePath: "/tmp/r.xcresult"
+            ),
+            ["xcodebuild", "test",
+             "-workspace", "/proj/MyApp.xcworkspace",
+             "-scheme", "MyApp",
+             "-destination", "platform=macOS",
+             "-resultBundlePath", "/tmp/r.xcresult",
+             "-enableCodeCoverage", "YES"]
+        )
+    }
+
     /// Integration test: `xcodebuild -list -json` is fast (no build, just scheme
     /// inspection) and lets us cover the subprocess path against this repo's
     /// own Package.swift. Skipped on platforms without xcodebuild — and skipped
