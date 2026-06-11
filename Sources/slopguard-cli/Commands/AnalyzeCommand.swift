@@ -14,6 +14,7 @@ struct AnalyzeCommand: AsyncParsableCommand {
             Examples:
               slopguard-swift analyze --path Sources --threshold 30 --json
               slopguard-swift analyze --path Sources --scheme MyApp-Package --destination 'platform=iOS Simulator,name=iPhone 16'
+              slopguard-swift analyze --path . --workspace MyApp.xcworkspace --scheme MyApp # CocoaPods-style workspace
               slopguard-swift analyze --path . --fail-over 50      # fail CI when any method's CRAP > 50
               slopguard-swift analyze --path Sources --no-coverage # skip the test build (complexity-only)
             """
@@ -27,6 +28,9 @@ struct AnalyzeCommand: AsyncParsableCommand {
 
     @Option(name: .long, help: "xcodebuild scheme to test for coverage. Auto-discovered when omitted.")
     var scheme: String?
+
+    @Option(name: .long, help: "Path to an .xcworkspace passed as -workspace to xcodebuild. Use when the project directory holds multiple containers (e.g. CocoaPods) and xcodebuild picks the wrong one, causing build errors.")
+    var workspace: String?
 
     @Option(name: .long, help: "xcodebuild destination string. Defaults to platform=macOS.")
     var destination: String = "platform=macOS"
@@ -142,6 +146,7 @@ struct AnalyzeCommand: AsyncParsableCommand {
             noCoverage: noCoverage,
             xcresult: xcresult,
             scheme: scheme,
+            workspace: workspace,
             destination: destination,
             projectDir: projectDir
         )
