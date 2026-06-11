@@ -203,6 +203,7 @@ final class AnalysisPipelineTests: XCTestCase {
             noCoverage: true,
             xcresult: "/anything.xcresult",
             scheme: "X",
+            workspace: nil,
             destination: "platform=macOS",
             projectDir: "/x"
         )
@@ -214,6 +215,7 @@ final class AnalysisPipelineTests: XCTestCase {
             noCoverage: false,
             xcresult: "/path/to/Result.xcresult",
             scheme: nil,
+            workspace: nil,
             destination: "platform=macOS",
             projectDir: nil
         )
@@ -232,6 +234,7 @@ final class AnalysisPipelineTests: XCTestCase {
             noCoverage: false,
             xcresult: nil,
             scheme: nil,
+            workspace: nil,
             destination: "platform=macOS",
             projectDir: nil,
             cwd: cwd
@@ -239,6 +242,7 @@ final class AnalysisPipelineTests: XCTestCase {
         guard case .auto(let opts) = cov else { return XCTFail("expected .auto") }
         XCTAssertNil(opts.projectDirectory,
                      "projectDirectory must be nil so the pipeline can discover from sourceURL")
+        XCTAssertNil(opts.workspace)
         XCTAssertNil(opts.scheme)
         XCTAssertEqual(opts.destination, "platform=macOS")
     }
@@ -249,6 +253,7 @@ final class AnalysisPipelineTests: XCTestCase {
             noCoverage: false,
             xcresult: nil,
             scheme: "MyApp-Package",
+            workspace: nil,
             destination: "platform=iOS Simulator,name=iPhone 15",
             projectDir: "subdir",
             cwd: cwd
@@ -264,11 +269,43 @@ final class AnalysisPipelineTests: XCTestCase {
             noCoverage: false,
             xcresult: nil,
             scheme: nil,
+            workspace: nil,
             destination: "platform=macOS",
             projectDir: "/abs/elsewhere"
         )
         guard case .auto(let opts) = cov else { return XCTFail("expected .auto") }
         XCTAssertEqual(opts.projectDirectory?.path, "/abs/elsewhere")
+    }
+
+    /// A relative `--workspace` is resolved against the user's cwd before it
+    /// reaches xcodebuild — xcodebuild would otherwise resolve it against its
+    /// own working directory, which can differ from where the user invoked us.
+    func testFromFlagsRelativeWorkspaceResolvesAgainstCwd() {
+        let cwd = URL(fileURLWithPath: "/work/proj")
+        let cov = AnalysisPipeline.CoverageSource.fromFlags(
+            noCoverage: false,
+            xcresult: nil,
+            scheme: "MyApp",
+            workspace: "MyApp.xcworkspace",
+            destination: "platform=macOS",
+            projectDir: nil,
+            cwd: cwd
+        )
+        guard case .auto(let opts) = cov else { return XCTFail("expected .auto") }
+        XCTAssertEqual(opts.workspace?.path, "/work/proj/MyApp.xcworkspace")
+    }
+
+    func testFromFlagsAbsoluteWorkspaceIsRespected() {
+        let cov = AnalysisPipeline.CoverageSource.fromFlags(
+            noCoverage: false,
+            xcresult: nil,
+            scheme: nil,
+            workspace: "/abs/MyApp.xcworkspace",
+            destination: "platform=macOS",
+            projectDir: nil
+        )
+        guard case .auto(let opts) = cov else { return XCTFail("expected .auto") }
+        XCTAssertEqual(opts.workspace?.path, "/abs/MyApp.xcworkspace")
     }
 
     // MARK: - Helpers
