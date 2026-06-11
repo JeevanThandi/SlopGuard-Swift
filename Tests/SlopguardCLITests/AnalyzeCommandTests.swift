@@ -171,6 +171,20 @@ final class AnalyzeCommandTests: XCTestCase {
         XCTAssertEqual(cmd.resolveProgressReporter().verbosity, .silent)
     }
 
+    // MARK: - Workspace flag
+
+    /// `--workspace` parses and lands on the command; the coverage-layer tests
+    /// verify it flows through `fromFlags` into the xcodebuild invocation.
+    func testWorkspaceFlagParses() throws {
+        let cmd = try parse(["--path", ".", "--workspace", "MyApp.xcworkspace"])
+        XCTAssertEqual(cmd.workspace, "MyApp.xcworkspace")
+    }
+
+    func testWorkspaceDefaultsToNil() throws {
+        let cmd = try parse(["--path", "."])
+        XCTAssertNil(cmd.workspace)
+    }
+
     // MARK: - Path default
 
     /// Bare `slopguard-swift analyze` analyzes the current directory.

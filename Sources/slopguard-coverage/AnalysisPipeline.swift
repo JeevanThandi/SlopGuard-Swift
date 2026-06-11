@@ -38,15 +38,18 @@ public struct AnalysisPipeline: Sendable {
     /// explicitly only when the caller knows better than the auto-discovery.
     public struct AutoCoverageOptions: Sendable {
         public var projectDirectory: URL?
+        public var workspace: URL?
         public var scheme: String?
         public var destination: String
 
         public init(
             projectDirectory: URL? = nil,
+            workspace: URL? = nil,
             scheme: String? = nil,
             destination: String = "platform=macOS"
         ) {
             self.projectDirectory = projectDirectory
+            self.workspace = workspace
             self.scheme = scheme
             self.destination = destination
         }
@@ -70,6 +73,7 @@ public struct AnalysisPipeline: Sendable {
             noCoverage: Bool,
             xcresult: String?,
             scheme: String?,
+            workspace: String?,
             destination: String,
             projectDir: String?,
             cwd: URL = URL(fileURLWithPath: FileManager.default.currentDirectoryPath, isDirectory: true)
@@ -83,10 +87,13 @@ public struct AnalysisPipeline: Sendable {
             // Pass nil through when the caller didn't supply --project-dir; the
             // pipeline will discover the right project root from sourceURL.
             // Resolving relative paths still uses cwd when an explicit path is
-            // given (e.g. `--project-dir subdir`).
+            // given (e.g. `--project-dir subdir`). The workspace path is made
+            // absolute here too — xcodebuild would otherwise resolve it against
+            // its own working directory, which may differ from the user's cwd.
             let projectDirectory = projectDir.map { resolveURL($0, cwd: cwdDir) }
             return .auto(.init(
                 projectDirectory: projectDirectory,
+                workspace: workspace.map { resolveURL($0, cwd: cwdDir) },
                 scheme: scheme,
                 destination: destination
             ))
@@ -206,6 +213,7 @@ public struct AnalysisPipeline: Sendable {
             let bundleURL = tempDir.appendingPathComponent("coverage.xcresult", isDirectory: true)
             let outcome = try await xcodebuild.runTests(
                 scheme: opts.scheme,
+                workspace: opts.workspace,
                 destination: opts.destination,
                 projectDirectory: projectDirectory,
                 resultBundleURL: bundleURL,

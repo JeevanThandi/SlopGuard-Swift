@@ -39,6 +39,9 @@ slopguard-swift analyze --path Sources --threshold 30
 # iOS app: pick a scheme and destination
 slopguard-swift analyze --path . --scheme MyApp --destination 'platform=iOS Simulator,name=iPhone 16'
 
+# CocoaPods-style project: point xcodebuild at the workspace explicitly
+slopguard-swift analyze --path . --workspace MyApp.xcworkspace --scheme MyApp
+
 # Full JSON for CI / downstream tooling
 slopguard-swift analyze --path Sources --json | jq '.methods | sort_by(-.crap)[:10]'
 
