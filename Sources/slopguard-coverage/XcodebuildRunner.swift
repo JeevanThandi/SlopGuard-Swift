@@ -28,6 +28,10 @@ public struct XcodebuildRunner: Sendable {
     ///   - destination:      e.g. `"platform=macOS"`.
     ///   - projectDirectory: Working directory for `xcodebuild` (defaults to cwd).
     ///   - resultBundleURL:  Where to write the `.xcresult` bundle.
+    ///   - onlyTesting:      Test identifiers forwarded as `-only-testing:<id>`
+    ///                       so the run can be scoped to a target / class /
+    ///                       method instead of the whole suite. Empty means
+    ///                       run everything.
     /// - Returns: `(resultBundleURL, testsPassed)`. Build failures throw;
     ///   test failures don't — partial coverage is still useful.
     public func runTests(
@@ -36,6 +40,7 @@ public struct XcodebuildRunner: Sendable {
         destination: String = "platform=macOS",
         projectDirectory: URL = URL(fileURLWithPath: FileManager.default.currentDirectoryPath),
         resultBundleURL: URL,
+        onlyTesting: [String] = [],
         progress: ProgressReporter = .silent
     ) async throws -> (resultBundle: URL, testsPassed: Bool) {
         let projectPath = projectDirectory.standardizedFileURL.path
@@ -52,7 +57,8 @@ public struct XcodebuildRunner: Sendable {
             }
         }
 
-        progress.phase("running xcodebuild test (scheme '\(resolvedScheme)', destination '\(destination)') — this can take several minutes")
+        let scopeNote = onlyTesting.isEmpty ? "" : ", scoped to \(onlyTesting.joined(separator: ", "))"
+        progress.phase("running xcodebuild test (scheme '\(resolvedScheme)', destination '\(destination)'\(scopeNote)) — this can take several minutes")
         let testsPassed = try await Self.detached {
             try Self.runXcodebuildTest(
                 scheme: resolvedScheme,
@@ -60,6 +66,7 @@ public struct XcodebuildRunner: Sendable {
                 destination: destination,
                 projectDirectory: projectPath,
                 resultBundlePath: bundlePath,
+                onlyTesting: onlyTesting,
                 progress: progress
             )
         }
@@ -131,7 +138,8 @@ public struct XcodebuildRunner: Sendable {
         scheme: String,
         workspace: String?,
         destination: String,
-        resultBundlePath: String
+        resultBundlePath: String,
+        onlyTesting: [String]
     ) -> [String] {
         var args = ["xcodebuild", "test"]
         if let workspace { args += ["-workspace", workspace] }
@@ -141,6 +149,9 @@ public struct XcodebuildRunner: Sendable {
             "-resultBundlePath", resultBundlePath,
             "-enableCodeCoverage", "YES"
         ]
+        // xcodebuild's filter syntax is colon-joined (`-only-testing:Target/Class`),
+        // not a separate argument value.
+        args += onlyTesting.map { "-only-testing:\($0)" }
         return args
     }
 
@@ -156,6 +167,7 @@ public struct XcodebuildRunner: Sendable {
         destination: String,
         projectDirectory: String,
         resultBundlePath: String,
+        onlyTesting: [String] = [],
         progress: ProgressReporter = .silent
     ) throws -> Bool {
         let process = Process()
@@ -164,7 +176,8 @@ public struct XcodebuildRunner: Sendable {
             scheme: scheme,
             workspace: workspace,
             destination: destination,
-            resultBundlePath: resultBundlePath
+            resultBundlePath: resultBundlePath,
+            onlyTesting: onlyTesting
         )
         process.currentDirectoryURL = URL(fileURLWithPath: projectDirectory)
 

@@ -295,6 +295,35 @@ final class AnalysisPipelineTests: XCTestCase {
         XCTAssertEqual(opts.workspace?.path, "/work/proj/MyApp.xcworkspace")
     }
 
+    /// `--only-testing` identifiers flow through untouched — they're test
+    /// identifiers, not paths, so no cwd resolution applies.
+    func testFromFlagsOnlyTestingFlowsThrough() {
+        let cov = AnalysisPipeline.CoverageSource.fromFlags(
+            noCoverage: false,
+            xcresult: nil,
+            scheme: nil,
+            workspace: nil,
+            destination: "platform=macOS",
+            projectDir: nil,
+            onlyTesting: ["MyAppTests/LoginTests"]
+        )
+        guard case .auto(let opts) = cov else { return XCTFail("expected .auto") }
+        XCTAssertEqual(opts.onlyTesting, ["MyAppTests/LoginTests"])
+    }
+
+    func testFromFlagsOnlyTestingDefaultsToEmpty() {
+        let cov = AnalysisPipeline.CoverageSource.fromFlags(
+            noCoverage: false,
+            xcresult: nil,
+            scheme: nil,
+            workspace: nil,
+            destination: "platform=macOS",
+            projectDir: nil
+        )
+        guard case .auto(let opts) = cov else { return XCTFail("expected .auto") }
+        XCTAssertEqual(opts.onlyTesting, [])
+    }
+
     func testFromFlagsAbsoluteWorkspaceIsRespected() {
         let cov = AnalysisPipeline.CoverageSource.fromFlags(
             noCoverage: false,

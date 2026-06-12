@@ -57,7 +57,8 @@ final class XcodebuildRunnerTests: XCTestCase {
                 scheme: "MyApp",
                 workspace: nil,
                 destination: "platform=macOS",
-                resultBundlePath: "/tmp/r.xcresult"
+                resultBundlePath: "/tmp/r.xcresult",
+                onlyTesting: []
             ),
             ["xcodebuild", "test",
              "-scheme", "MyApp",
@@ -73,7 +74,8 @@ final class XcodebuildRunnerTests: XCTestCase {
                 scheme: "MyApp",
                 workspace: "/proj/MyApp.xcworkspace",
                 destination: "platform=macOS",
-                resultBundlePath: "/tmp/r.xcresult"
+                resultBundlePath: "/tmp/r.xcresult",
+                onlyTesting: []
             ),
             ["xcodebuild", "test",
              "-workspace", "/proj/MyApp.xcworkspace",
@@ -81,6 +83,27 @@ final class XcodebuildRunnerTests: XCTestCase {
              "-destination", "platform=macOS",
              "-resultBundlePath", "/tmp/r.xcresult",
              "-enableCodeCoverage", "YES"]
+        )
+    }
+
+    /// `-only-testing` uses xcodebuild's colon-joined form, one argument per
+    /// identifier — not `-only-testing <id>` as two arguments.
+    func testTestArgumentsWithOnlyTestingFilters() {
+        XCTAssertEqual(
+            XcodebuildRunner.testArguments(
+                scheme: "MyApp",
+                workspace: nil,
+                destination: "platform=macOS",
+                resultBundlePath: "/tmp/r.xcresult",
+                onlyTesting: ["MyAppTests/LoginTests", "MyAppTests/SignupTests/testHappyPath"]
+            ),
+            ["xcodebuild", "test",
+             "-scheme", "MyApp",
+             "-destination", "platform=macOS",
+             "-resultBundlePath", "/tmp/r.xcresult",
+             "-enableCodeCoverage", "YES",
+             "-only-testing:MyAppTests/LoginTests",
+             "-only-testing:MyAppTests/SignupTests/testHappyPath"]
         )
     }
 

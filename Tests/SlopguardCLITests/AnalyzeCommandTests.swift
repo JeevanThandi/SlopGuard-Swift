@@ -185,6 +185,30 @@ final class AnalyzeCommandTests: XCTestCase {
         XCTAssertNil(cmd.workspace)
     }
 
+    // MARK: - Only-testing flag
+
+    /// `--only-testing` accepts repeated and space-separated identifiers, like
+    /// `--include` / `--exclude`.
+    func testOnlyTestingFlagParsesRepeatedAndSpaceSeparated() throws {
+        let repeated = try parse([
+            "--path", ".",
+            "--only-testing", "MyAppTests/LoginTests",
+            "--only-testing", "MyAppTests/SignupTests"
+        ])
+        XCTAssertEqual(repeated.onlyTesting, ["MyAppTests/LoginTests", "MyAppTests/SignupTests"])
+
+        let spaceSeparated = try parse([
+            "--path", ".",
+            "--only-testing", "MyAppTests/LoginTests", "MyAppTests/SignupTests"
+        ])
+        XCTAssertEqual(spaceSeparated.onlyTesting, ["MyAppTests/LoginTests", "MyAppTests/SignupTests"])
+    }
+
+    func testOnlyTestingDefaultsToEmpty() throws {
+        let cmd = try parse(["--path", "."])
+        XCTAssertEqual(cmd.onlyTesting, [])
+    }
+
     // MARK: - Path default
 
     /// Bare `slopguard-swift analyze` analyzes the current directory.
