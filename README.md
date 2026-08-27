@@ -1,4 +1,4 @@
-# slopguard-swift (Alpha, not ready for use)
+# slopguard-swift
 
 [![CI](https://github.com/JeevanThandi/SlopGuard-Swift/actions/workflows/ci.yml/badge.svg)](https://github.com/JeevanThandi/SlopGuard-Swift/actions/workflows/ci.yml)
 
