@@ -32,6 +32,9 @@ public struct AnalysisOptions: Sendable, Hashable, Codable {
     ///   `*Spec` convention. Test code's CRAP isn't user-facing risk; if you
     ///   genuinely want to inspect test complexity, pass
     ///   `--no-default-excludes`.
+    /// - **Package manifests** — `Package.swift` is build tooling, not product
+    ///   code. `mutate` must never edit it: a mutated manifest can change the
+    ///   dependency graph mid-run.
     public static let defaultExcludeGlobs: [String] = [
         // Build / dependency dirs
         "**/.build/**",
@@ -49,11 +52,28 @@ public struct AnalysisOptions: Sendable, Hashable, Codable {
         "**/*Specs/**",
         "**/*Spec.swift",
         "**/*Specs.swift",
+        // Package manifests (build tooling, not product code)
+        "**/Package.swift",
+        "**/Package@swift-*.swift",
         // Reference fixtures used to benchmark the analyzer itself; deliberately
         // skipped from a top-level scan so they don't pollute dogfood numbers.
         // Pass an explicit `--path SampleApps/...` to analyze them on demand.
         "**/SampleApps/**"
     ]
+}
+
+/// One Swift file selected by the directory walk.
+public struct SourceFile: Sendable, Hashable {
+    /// Absolute URL of the file.
+    public let url: URL
+    /// Path relative to the walk root (forward-slash, no leading `./`) — the
+    /// path every report shows for this file.
+    public let relativePath: String
+
+    public init(url: URL, relativePath: String) {
+        self.url = url
+        self.relativePath = relativePath
+    }
 }
 
 /// Walks a directory tree and analyzes every `.swift` file it finds, in parallel.
@@ -71,9 +91,22 @@ public struct DirectoryAnalyzer: Sendable {
         rootURL: URL,
         options: AnalysisOptions = .default
     ) async throws -> [FileReport] {
-        let (files, rootPrefix) = try resolveFileSet(rootURL: rootURL, options: options)
-        let reports = try await analyzeInParallel(files: files, rootPrefix: rootPrefix)
+        let files = try sourceFiles(rootURL: rootURL, options: options)
+        let reports = try await analyzeInParallel(files: files)
         return reports.sorted { $0.path < $1.path }
+    }
+
+    /// The Swift files `analyze` reads under `rootURL`, after the include /
+    /// exclude / default-exclude rules, sorted by relative path. `rootURL` may
+    /// be a single file, whose relative path is then its file name. `mutate`
+    /// walks with this too, so both commands see the same file set.
+    public func sourceFiles(rootURL: URL, options: AnalysisOptions = .default) throws -> [SourceFile] {
+        let (files, rootPrefix) = try resolveFileSet(rootURL: rootURL, options: options)
+        return files
+            .map { url in
+                SourceFile(url: url, relativePath: relativize(url.standardizedFileURL.path, under: rootPrefix))
+            }
+            .sorted { $0.relativePath < $1.relativePath }
     }
 
     // MARK: - Decomposition
@@ -87,17 +120,17 @@ public struct DirectoryAnalyzer: Sendable {
         if isDir.boolValue {
             return (try enumerateSwiftFiles(under: rootURL, options: options), rootPath)
         }
-        return ([rootURL], rootURL.deletingLastPathComponent().path)
+        // Standardize the parent like the file itself, so `/private/var/…`
+        // and `/var/…` spellings of one root never disagree.
+        return ([rootURL], rootURL.standardizedFileURL.deletingLastPathComponent().path)
     }
 
-    private func analyzeInParallel(files: [URL], rootPrefix: String) async throws -> [FileReport] {
+    private func analyzeInParallel(files: [SourceFile]) async throws -> [FileReport] {
         let analyzer = self.analyzer
         return try await withThrowingTaskGroup(of: FileReport.self) { group in
-            for url in files {
+            for file in files {
                 group.addTask {
-                    let absolute = url.standardizedFileURL.path
-                    let relative = relativize(absolute, under: rootPrefix)
-                    return try analyzer.analyze(url: url, reportedPath: relative)
+                    try analyzer.analyze(url: file.url, reportedPath: file.relativePath)
                 }
             }
             var collected: [FileReport] = []

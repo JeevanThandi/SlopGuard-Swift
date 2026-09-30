@@ -40,6 +40,18 @@ public enum SlopguardError: Error, Sendable, CustomStringConvertible {
     case xcodebuildBuildFailed(exitCode: Int32, stderr: String)
     case invalidArgument(name: String, reason: String)
     case unsupported(reason: String)
+    /// `mutate` could not launch its test runner (`swift`, `xcrun xcodebuild`).
+    case runnerUnavailable(reason: String)
+    /// `mutate` found no `Package.swift`, `.xcodeproj` or `.xcworkspace` to test.
+    case runnerNotDetected(projectDirectory: String)
+    /// The unmutated test suite fails, so mutants cannot be judged against it.
+    /// `exitCode` is `nil` when the process ended without an exit status.
+    case baselineFailed(exitCode: Int32?, output: String)
+    /// Another live `mutate` run holds the workspace guard for this project.
+    case mutationInProgress(pid: Int32, projectRoot: String)
+    /// Writing a mutated file's original bytes back failed. The guard directory
+    /// keeps a copy at `backupPath`.
+    case restoreFailed(path: String, backupPath: String, underlying: String)
 
     public var code: String { info.code }
     public var message: String { info.message }
@@ -94,6 +106,28 @@ public enum SlopguardError: Error, Sendable, CustomStringConvertible {
             return ("invalid_argument", "Invalid argument '\(name)': \(reason)")
         case .unsupported(let reason):
             return ("unsupported", "Unsupported: \(reason)")
+        case .runnerUnavailable(let reason):
+            return ("runner_unavailable", "Test runner is unavailable: \(reason)")
+        case .runnerNotDetected(let projectDirectory):
+            return (
+                "runner_not_detected",
+                "No supported test runner (swift test, xcodebuild) was detected under \(projectDirectory). " +
+                    "Pass --runner <swift-test|xcodebuild>, or --project-dir pointing at a directory with a " +
+                    "Package.swift, .xcodeproj or .xcworkspace."
+            )
+        case .baselineFailed(let exitCode, let output):
+            let exit = exitCode.map { "\($0)" } ?? "unknown"
+            return (
+                "baseline_failed",
+                "The test suite fails without any mutation (exit \(exit)). Fix the failing tests first: \(output)"
+            )
+        case .mutationInProgress(let pid, let projectRoot):
+            return ("mutation_in_progress", "Another slopguard mutate run (pid \(pid)) is using \(projectRoot).")
+        case .restoreFailed(let path, let backupPath, let underlying):
+            return (
+                "restore_failed",
+                "Could not restore \(path) after mutation: \(underlying). The original is saved at \(backupPath)."
+            )
         }
     }
 }

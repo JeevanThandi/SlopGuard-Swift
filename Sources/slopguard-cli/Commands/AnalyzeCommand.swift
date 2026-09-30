@@ -36,7 +36,7 @@ struct AnalyzeCommand: AsyncParsableCommand {
     @Option(name: .long, help: "xcodebuild destination string. Defaults to platform=macOS.")
     var destination: String = "platform=macOS"
 
-    @Option(name: .long, help: "Project directory passed as cwd to xcodebuild. Defaults to the current directory.")
+    @Option(name: .long, help: "Project directory passed as cwd to xcodebuild. Defaults to the nearest directory at or above --path that holds a Package.swift, .xcodeproj or .xcworkspace.")
     var projectDir: String?
 
     @Option(name: .customLong("only-testing"), parsing: .upToNextOption,
@@ -159,7 +159,9 @@ struct AnalyzeCommand: AsyncParsableCommand {
     }
 }
 
-private func resolvePath(_ raw: String) -> URL {
+/// Resolve a path flag the way `analyze` and `mutate` both do: expand `~`,
+/// then make it absolute against the current directory.
+func resolvePath(_ raw: String) -> URL {
     let expanded = (raw as NSString).expandingTildeInPath
     if expanded.hasPrefix("/") {
         return URL(fileURLWithPath: expanded).standardizedFileURL

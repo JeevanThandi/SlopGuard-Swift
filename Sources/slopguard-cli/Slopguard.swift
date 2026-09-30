@@ -17,10 +17,15 @@ public struct Slopguard: AsyncParsableCommand {
 
             Formula:  wCRAP(m) = (cyc × cog) × (1 − cov/100)³ + sqrt(cyc × cog)
             Default crappy threshold: 30.
+
+            `mutate` checks that the tests verify the code, not only run it: it changes \
+            the source one small step at a time (a mutant), runs the tests against each \
+            mutant, and lists the mutants every test still passes with.
             """,
         version: SlopguardVersion.version,
         subcommands: [
             AnalyzeCommand.self,
+            MutateCommand.self,
             VersionCommand.self
         ],
         defaultSubcommand: AnalyzeCommand.self

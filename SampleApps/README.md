@@ -7,7 +7,7 @@ parent project.
 
 | Fixture | Shape | Expected baseline |
 |---|---|---|
-| `TodoList/` | Tiny logic-only package: `Todo`, `TodoFilter`, `TodoStore`. No UI. | Zero crappy methods at threshold 30, weighted coverage ≥ 95%. |
+| `TodoList/` | Tiny logic-only package: `Todo`, `TodoFilter`, `TodoStore`. No UI. | `analyze`: zero crappy methods at threshold 30, weighted coverage ≥ 95%. `mutate`: 11 mutants, 11 killed, 0 survived (score 100). |
 
 ## Why these exist
 
@@ -26,6 +26,18 @@ From the repo root, after building the release binary:
 swift build -c release --product slopguard-swift
 .build/release/slopguard-swift analyze --path SampleApps/TodoList
 ```
+
+Mutation testing uses the fixture's own `swift test` (the `swift test`
+runner, because the package has a `Package.swift` and no Xcode project):
+
+```bash
+.build/release/slopguard-swift mutate --path SampleApps/TodoList
+```
+
+The fixture's tests must kill every mutant. When a change to slopguard adds a
+mutant that the tests miss, strengthen the fixture's tests, never its sources.
+A truly equivalent mutant can instead be marked with
+`// slopguard-ignore-mutant(<id>)`. Then update the CI baseline.
 
 Or via `swift run` directly inside the fixture (uses the fixture's own
 `swift test` to gather coverage):

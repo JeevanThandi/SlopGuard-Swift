@@ -31,7 +31,7 @@ public struct XccovRunner: XccovReporting, Sendable {
     /// Spawn `xcrun xccov view --report --json <path>` and return its stdout.
     /// Throws a typed `SlopguardError` for launch / non-zero-exit failures so the
     /// caller doesn't have to inspect `Process.terminationStatus` itself.
-    static func runXccov(xcresultPath: String) throws -> Data {
+    package static func runXccov(xcresultPath: String) throws -> Data {
         try ProcessRunner.runOrThrow(
             executable: "/usr/bin/xcrun",
             arguments: ["xccov", "view", "--report", "--json", xcresultPath],
@@ -54,7 +54,7 @@ public struct XccovRunner: XccovReporting, Sendable {
         return .xccovInvocationFailed(exitCode: exitCode, stderr: stderr)
     }
 
-    static func decode(data: Data) throws -> XccovReport {
+    package static func decode(data: Data) throws -> XccovReport {
         do {
             return try JSONDecoder().decode(XccovReport.self, from: data)
         } catch {

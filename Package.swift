@@ -3,9 +3,12 @@
 // slopguard-swift — CRAP guardrail for Swift / iOS.
 //
 // Targets:
-//   • SlopguardCore     — Pure analysis logic: CRAP formula, models, ComplexityVisitor.
+//   • SlopguardCore     — Pure analysis logic: CRAP formula, models, ComplexityVisitor,
+//                         mutant generation and the mutation report.
 //   • SlopguardCoverage — Xcode coverage parsing via `xcrun xccov`.
-//   • SlopguardCLI      — ArgumentParser CLI (analyze / version).
+//   • SlopguardMutation — `mutate` runners (swift test / xcodebuild), workspace guard,
+//                         signal handling and the mutation pipeline.
+//   • SlopguardCLI      — ArgumentParser CLI (analyze / mutate / version).
 //   • slopguard-bin     — Thin executable entry point.
 
 import PackageDescription
@@ -18,6 +21,7 @@ let package = Package(
     products: [
         .library(name: "SlopguardCore", targets: ["SlopguardCore"]),
         .library(name: "SlopguardCoverage", targets: ["SlopguardCoverage"]),
+        .library(name: "SlopguardMutation", targets: ["SlopguardMutation"]),
         .library(name: "SlopguardCLI", targets: ["SlopguardCLI"]),
         .executable(name: "slopguard-swift", targets: ["slopguard-bin"])
     ],
@@ -45,6 +49,14 @@ let package = Package(
             swiftSettings: [.swiftLanguageMode(.v6)]
         ),
 
+        // MARK: Mutation
+        .target(
+            name: "SlopguardMutation",
+            dependencies: ["SlopguardCore", "SlopguardCoverage"],
+            path: "Sources/slopguard-mutation",
+            swiftSettings: [.swiftLanguageMode(.v6)]
+        ),
+
         // MARK: CLI library
         // Lives as a library so that:
         //   1. `SlopguardCLITests` can `@testable import SlopguardCLI`
@@ -56,6 +68,7 @@ let package = Package(
             dependencies: [
                 "SlopguardCore",
                 "SlopguardCoverage",
+                "SlopguardMutation",
                 .product(name: "ArgumentParser", package: "swift-argument-parser")
             ],
             path: "Sources/slopguard-cli",
@@ -88,6 +101,14 @@ let package = Package(
             name: "SlopguardCLITests",
             dependencies: ["SlopguardCLI"],
             path: "Tests/SlopguardCLITests",
+            swiftSettings: [.swiftLanguageMode(.v6)]
+        ),
+        // swift-testing rather than XCTest: unlike the targets above, this
+        // one also builds with only the Command Line Tools, which ship no XCTest.
+        .testTarget(
+            name: "SlopguardMutationTests",
+            dependencies: ["SlopguardCore", "SlopguardCoverage", "SlopguardMutation", "SlopguardCLI"],
+            path: "Tests/SlopguardMutationTests",
             swiftSettings: [.swiftLanguageMode(.v6)]
         )
     ]

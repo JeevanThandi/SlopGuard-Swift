@@ -11,7 +11,8 @@ jobs:
   build-and-test:
     name: Build & test (macOS)
     runs-on: macos-15
-    timeout-minutes: 25
+    # The mutation baseline below builds and tests the fixture once per mutant.
+    timeout-minutes: 35
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -57,6 +58,21 @@ jobs:
             and .summary.weightedCoverage == 100
           ' todolist-baseline.json
 
+      # Mutation baseline: the fixture's tests must kill every mutant. The
+      # package has only a Package.swift, so mutate drives `swift test`
+      # (build + test per mutant, llvm-cov for the coverage baseline). A
+      # survivor here means a weaker fixture test or a mutate regression.
+      - name: Mutation baseline (SampleApps/TodoList)
+        run: |
+          swift run slopguard-swift mutate --path SampleApps/TodoList --json > todolist-mutate.json
+          jq -e '
+            .runner == "swift test"
+            and .coverageAvailable == true
+            and .summary.mutantCount == 11
+            and .summary.killed == 11
+            and .summary.survived == 0
+          ' todolist-mutate.json
+
       - name: Upload self-analysis
         uses: actions/upload-artifact@v4
         with:
@@ -64,6 +80,7 @@ jobs:
           path: |
             slopguard-self.json
             todolist-baseline.json
+            todolist-mutate.json
           if-no-files-found: error
 
   release-build:
@@ -90,3 +107,4 @@ jobs:
         run: |
           ./.build/apple/Products/Release/slopguard-swift version
           ./.build/apple/Products/Release/slopguard-swift analyze --path Sources --no-coverage --threshold 30 --json > /dev/null
+          ./.build/apple/Products/Release/slopguard-swift mutate --path Sources --dry-run --json > /dev/null

@@ -79,7 +79,7 @@ public struct XcodebuildRunner: Sendable {
     /// SwiftPM packages expose a `<name>-Package` umbrella scheme that runs
     /// every test target. Prefer that. Otherwise fall back to a single
     /// available scheme; bail out when there's ambiguity rather than guess.
-    static func discoverDefaultScheme(projectDirectory: String, workspace: String? = nil) throws -> String {
+    package static func discoverDefaultScheme(projectDirectory: String, workspace: String? = nil) throws -> String {
         let data = try runXcodebuildList(projectDirectory: projectDirectory, workspace: workspace)
         let schemes = try decodeSchemes(data: data)
         guard !schemes.isEmpty else {
@@ -134,7 +134,7 @@ public struct XcodebuildRunner: Sendable {
         return args
     }
 
-    static func testArguments(
+    package static func testArguments(
         scheme: String,
         workspace: String?,
         destination: String,

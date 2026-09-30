@@ -71,12 +71,13 @@ public struct AnalysisPipeline: Sendable {
 
         /// Resolve a `CoverageSource` from CLI-style flag values. Pure (the
         /// only filesystem touch is constructing URLs), so unit-testable
-        /// without spinning up `AnalyzeCommand`.
+        /// without spinning up `AnalyzeCommand`. Parameters added after v0.1.0
+        /// have defaults, so v0.1.0 call sites still compile.
         public static func fromFlags(
             noCoverage: Bool,
             xcresult: String?,
             scheme: String?,
-            workspace: String?,
+            workspace: String? = nil,
             destination: String,
             projectDir: String?,
             onlyTesting: [String] = [],
